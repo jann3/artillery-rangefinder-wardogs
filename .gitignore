@@ -1,0 +1,3 @@
+# Krita source artwork, backups and autosaves: keep out of the repo and the Netlify deploy
+*.kra
+*.kra~

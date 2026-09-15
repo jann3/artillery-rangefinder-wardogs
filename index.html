@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wardogs Artillery Rangefinder</title>
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   BACKGROUND IMAGE
+   Put your image in /images and set the filename below.
+   Delete the line to fall back to the gradient.
+   ============================================================ */
+:root {
+  --bg-image: url('images/bg.webp');
+  --bg-brightness: 0.65;       /* 1 = image at full brightness */
+  --bg-overlay-top: 38.5%;     /* dark overlay strength, top of screen */
+  --bg-overlay-bottom: 57.4%;  /* dark overlay strength, bottom of screen */
+}
+
+/* ============================================================
+   THEME
+   Tweak the base colours. Every tint, border, the compass dial
+   and the icons are mixed from them further down.
+   ============================================================ */
+:root {
+  /* browns, darkest to lightest */
+  --brown-900: #121210;   /* page background */
+  --brown-800: #1e1e19;   /* panels, active rows */
+  --brown-700: #2e2e26;   /* lightest tint, hovers */
+  --line:      #3a3a30;   /* borders */
+
+  /* text */
+  --white:  #ffffff;      /* strong text and key notes */
+  --text:   #e9e6dc;      /* off-white body text and headings */
+  --text-2: #b4b0a3;      /* secondary text */
+  --muted:  #86837a;      /* hints */
+  --faint:  #6b6860;      /* placeholders, scale labels */
+
+  /* accents */
+  --yellow:   #f5c518;
+  --red:      #e5533c;    /* out of range, errors */
+  --red-soft: #ff7a63;    /* red text on dark backgrounds */
+  --shadow:   #000000;
+
+  /* icons: base strokes and the highlighted part */
+  --icon-color:  var(--white);
+  --icon-accent: var(--yellow);
+
+  /* derived: mixed from the base colours above */
+  --brown-950:  color-mix(in srgb, var(--brown-900) 78%, black);
+  --brown-850:  color-mix(in srgb, var(--brown-900), var(--brown-800));
+  --brown-750:  color-mix(in srgb, var(--brown-800), var(--brown-700));
+  --popover-bg: color-mix(in srgb, var(--brown-800) 62%, var(--brown-700));
+  --line-hi:    color-mix(in srgb, var(--line) 91%, var(--text));
+  --line-soft:  color-mix(in srgb, var(--text) 8%, transparent);
+
+  --yellow-hi:   color-mix(in srgb, var(--yellow) 88%, var(--white));
+  --yellow-soft: color-mix(in srgb, var(--yellow) 88%, var(--brown-900));
+  --yellow-dim:  color-mix(in srgb, var(--yellow) 54%, var(--brown-900));
+  --yellow-wash: color-mix(in srgb, var(--yellow) 10%, transparent);
+  --yellow-edge: color-mix(in srgb, var(--yellow) 35%, transparent);
+  --on-yellow:   color-mix(in srgb, var(--yellow) 10%, black);
+
+  --red-wash: color-mix(in srgb, var(--red) 12%, transparent);
+  --red-edge: color-mix(in srgb, var(--red) 42%, transparent);
+
+  --r-xl: 18px;
+  --r-lg: 14px;
+  --r-md: 10px;
+
+  --shell: 680px;
+  --shell-wide: 1160px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;   /* ignores mobile browser toolbars so centring is true */
+  padding: 40px 20px;
+  background: var(--brown-900);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  display: flex;
+  justify-content: center;
+  align-items: center;  /* centres vertically; taller pages just scroll from the top */
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -60px;
+  z-index: -2;
+  background-color: var(--brown-950);
+  background-image:
+    radial-gradient(closest-side at 22% 18%, color-mix(in srgb, var(--yellow) 22%, transparent), transparent 70%),
+    radial-gradient(closest-side at 82% 72%, color-mix(in srgb, color-mix(in srgb, var(--yellow-dim) 85%, black) 30%, transparent), transparent 72%),
+    radial-gradient(closest-side at 55% 105%, color-mix(in srgb, var(--line) 55%, transparent), transparent 70%),
+    var(--bg-image, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(34px) saturate(0.7) brightness(var(--bg-brightness));
+  transform: scale(1.06);
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--brown-950) var(--bg-overlay-top), transparent) 0%,
+    color-mix(in srgb, var(--brown-950) var(--bg-overlay-bottom), transparent) 100%);
+}
+
+.shell {
+  width: 100%;
+  max-width: var(--shell-wide);
+  container: shell / inline-size;
+}
+/* stacked layout keeps the narrow reading width until two panels fit side by side */
+.shell > * { max-width: var(--shell); margin-inline: auto; }
+
+h1, h2 {
+  font-family: 'Saira Condensed', 'Inter', sans-serif;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  margin: 0;
+}
+h1 { font-size: 30px; font-weight: 700; line-height: 1.1; }
+h1 .slashes { color: var(--yellow); margin-right: 8px; }
+h2 { font-size: 15px; font-weight: 600; color: var(--text-2); }
+strong { color: var(--white); font-weight: 600; }
+
+.strapline { color: var(--text-2); font-size: 13.5px; margin: 4px 0 22px; }
+.strapline code { color: var(--yellow-soft); }
+
+/* soft dark halo so the title and subtitle stay readable over the background image */
+header {
+  text-shadow:
+    0 0 6px color-mix(in srgb, var(--brown-900) 85%, transparent),
+    0 0 18px color-mix(in srgb, var(--brown-900) 65%, transparent);
+}
+
+/* panels ---------------------------------------------------------- */
+.panel {
+  position: relative;
+  container: panel / inline-size;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--brown-800) 92%, transparent),
+    color-mix(in srgb, var(--brown-850) 94%, transparent));
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 18px 44px color-mix(in srgb, var(--shadow) 45%, transparent);
+}
+.panel + .panel,
+.duo + .panel { margin-top: 16px; }
+/* backdrop-filter makes each panel its own stacking context, so lift the
+   whole panel while one of its popovers is open or later panels paint over it */
+.panel:has(.popover[data-open="true"]) { z-index: 50; }
+
+/* two-up layout --------------------------------------------------- */
+@container shell (min-width: 1040px) {
+  .shell > * { max-width: none; }
+  .duo {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .duo > .panel + .panel { margin-top: 0; }
+  .duo > .panel { display: flex; flex-direction: column; }
+  .duo .panel-body { flex: 1; display: flex; flex-direction: column; }
+  .duo .empty { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.panel-body { padding: 18px; }
+
+/* how to use ------------------------------------------------------ */
+.howto { counter-reset: step; margin: 0; padding: 0; list-style: none; }
+.howto li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 30px;
+  margin-bottom: 7px;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.howto li:last-child { margin-bottom: 0; }
+.howto li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0; top: 1px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--yellow-wash);
+  border: 1px solid var(--yellow-edge);
+  color: var(--yellow);
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+.howto code { color: var(--yellow-soft); background: var(--brown-750); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+
+.howto-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 1px;
+  font-size: inherit;
+  font-weight: 600;
+  line-height: inherit;
+  color: var(--yellow);
+  border-bottom: 1px dashed var(--yellow-edge);
+  transition: color 130ms ease, border-color 130ms ease;
+}
+.howto-link:hover { color: var(--yellow-hi); border-bottom-color: var(--yellow); }
+.howto-link:focus-visible { outline: none; border-radius: 3px; box-shadow: 0 0 0 3px var(--yellow-wash); }
+.howto-link .chev-sm {
+  width: 6px; height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 160ms ease;
+}
+.howto-link[aria-expanded="true"] .chev-sm { transform: translateY(1px) rotate(-135deg); }
+
+.shots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0 6px;
+  animation: reveal 170ms ease-out;
+}
+.shot { margin: 0; }
+.shot-frame {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  border: 1px dashed var(--line);
+  background: var(--brown-850);
+}
+.shot-frame:has(img:not([hidden])) { border-style: solid; }
+.shot-frame::before {
+  content: attr(data-label);
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.shot-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.shot figcaption { margin-top: 7px; font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+.shot kbd {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  background: var(--brown-750);
+  color: var(--text);
+}
+
+/* position rows --------------------------------------------------- */
+.row {
+  display: grid;
+  grid-template-columns: 112px 1fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 13px 16px;
+  border-radius: var(--r-lg);
+  background: var(--brown-850);
+  border: 1px solid transparent;
+  border-left: 3px solid var(--line);
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.row + .row { margin-top: 10px; }
+.row.is-active { border-left-color: var(--yellow); background: var(--brown-800); }
+.row.is-filled { border-left-color: var(--yellow-dim); }
+.row.is-derived { border-left-color: var(--yellow-soft); background: color-mix(in srgb, var(--yellow) 4.5%, transparent); }
+/* spotter on: mute the target title so the two inputs read as either/or */
+.row.is-derived .row-label { color: var(--muted); --icon-color: var(--muted); --icon-accent: var(--muted); }
+.row.is-off { opacity: 0.42; }.row.spotter-detail { grid-template-columns: 112px repeat(4, 1fr); }
+
+.row-label {
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* icons ----------------------------------------------------------- */
+/* Inline SVGs from /icons: strokes use currentColor, the .accent part uses
+   --icon-accent. Set --icon-color or --icon-accent on any ancestor to recolour.
+   :where() keeps these rules at zero specificity so they are easy to override. */
+.icon {
+  width: 18px; height: 18px;
+  flex: none;
+  color: var(--icon-color);
+}
+:where(.icon .accent[stroke]:not([stroke="none"])) { stroke: var(--icon-accent); }
+:where(.icon .accent[fill]:not([fill="none"])) { fill: var(--icon-accent); }
+
+/* inputs ---------------------------------------------------------- */
+.field { position: relative; display: flex; align-items: center; }
+.field-prefix,
+.field-suffix {
+  position: absolute;
+  left: 12px;
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--yellow-dim);
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.field-suffix { left: auto; right: 12px; }
+.field:has(.field-suffix) input[type="text"] { padding-right: 4ch; }
+
+input[type="text"] {
+  width: 100%;
+  padding: 9px 12px 9px 4ch;
+  background: var(--brown-750);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+input[type="text"]::placeholder { color: var(--faint); }
+input[type="text"]:hover:not(:disabled):not([readonly]) { border-color: var(--line-hi); }
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-wash);
+}
+input[type="text"]:disabled { cursor: not-allowed; background: var(--brown-800); }
+input[type="text"][readonly] {
+  background: color-mix(in srgb, var(--yellow) 6%, transparent);
+  border-color: var(--yellow-edge);
+  color: var(--yellow);
+  cursor: default;
+}
+input.is-bad { border-color: var(--red); }
+input.is-bad:focus { box-shadow: 0 0 0 3px var(--red-wash); }
+
+/* checkbox -------------------------------------------------------- */
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.check input { position: absolute; opacity: 0; width: 0; height: 0; }
+.check .box {
+  width: 18px; height: 18px;
+  flex: none;
+  border: 1.5px solid var(--line);
+  border-radius: 5px;
+  background: var(--brown-750);
+  display: grid;
+  place-items: center;
+  transition: all 130ms ease;
+}
+.check .box::after {
+  content: "";
+  width: 9px; height: 5px;
+  border-left: 2px solid var(--brown-900);
+  border-bottom: 2px solid var(--brown-900);
+  transform: rotate(-45deg) scale(0.4);
+  opacity: 0;
+  transition: all 130ms ease;
+}
+.check input:checked + .box { background: var(--yellow); border-color: var(--yellow); }
+.check input:checked + .box::after { opacity: 1; transform: rotate(-45deg) scale(1); }
+.check input:focus-visible + .box { box-shadow: 0 0 0 3px var(--yellow-wash); }
+
+.spotter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 10px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line-soft);
+}
+
+/* buttons --------------------------------------------------------- */
+button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; background: none; color: inherit; }
+
+.btn {
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  background: var(--brown-750);
+  color: var(--text-2);
+  transition: all 130ms ease;
+}
+.btn:hover:not(:disabled) { background: var(--brown-700); color: var(--text); border-color: var(--line-hi); }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
+.btn-primary { background: var(--yellow); border-color: var(--yellow); color: var(--on-yellow); }
+.btn-primary:hover:not(:disabled) { background: var(--yellow-hi); border-color: var(--yellow-hi); color: var(--on-yellow); }
+.btn-sm { padding: 6px 14px; font-size: 12.5px; }
+.btn:disabled { cursor: not-allowed; opacity: 0.4; }
+
+.paste-btn {
+  padding: 7px 11px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--brown-750);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: all 130ms ease;
+  white-space: nowrap;
+}
+.paste-btn:hover:not(:disabled) { color: var(--yellow); border-color: var(--yellow-edge); }
+.paste-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
+.paste-btn:disabled { cursor: not-allowed; opacity: 0.4; }
+
+/* help + popovers ------------------------------------------------- */
+.help-wrap { position: relative; display: inline-flex; }
+.help {
+  width: 17px; height: 17px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--brown-750);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  transition: all 130ms ease;
+}
+.help:hover, .help[aria-expanded="true"] {
+  color: var(--yellow);
+  border-color: var(--yellow-edge);
+  background: var(--yellow-wash);
+}
+.help:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
+
+.popover {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 9px);
+  left: -8px;
+  width: 272px;
+  padding: 13px 15px;
+  background: var(--popover-bg);
+  border: 1px solid var(--yellow-edge);
+  border-radius: var(--r-lg);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--shadow) 60%, transparent);
+  /* reset type inherited from where the popover sits, e.g. the uppercase row labels */
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-2);
+  display: none;
+  translate: var(--nudge, 0px) 0;   /* set by script to keep it on screen */
+}
+.popover[data-open="true"] { display: block; animation: pop 130ms ease-out; }
+.popover::before {
+  content: "";
+  position: absolute;
+  top: -6px; left: 12px;
+  width: 10px; height: 10px;
+  background: var(--popover-bg);
+  border-left: 1px solid var(--yellow-edge);
+  border-top: 1px solid var(--yellow-edge);
+  transform: rotate(45deg);
+  translate: calc(var(--nudge, 0px) * -1) 0;   /* arrow stays over its button */
+}
+.popover.align-right { left: auto; right: -8px; }
+.popover.align-right::before { left: auto; right: 12px; }
+.popover code {
+  background: color-mix(in srgb, var(--yellow) 12%, transparent);
+  color: var(--yellow);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+@keyframes pop {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* solution -------------------------------------------------------- */
+.solution { display: grid; grid-template-columns: 232px 1fr; gap: 22px; align-items: center; }
+.dial-wrap { display: grid; place-items: center; }
+
+/* compass dial: shapes are drawn by script, colours come from the theme */
+#dial              { --hot: var(--yellow); }
+#dial.is-out       { --hot: var(--red); }
+#dial .face        { fill: color-mix(in srgb, var(--yellow) 3%, transparent); stroke: var(--line); }
+#dial .ring        { fill: none; stroke: color-mix(in srgb, var(--text) 7%, transparent); }
+#dial .tick        { stroke: var(--line); }
+#dial .tick.major  { stroke: color-mix(in srgb, var(--line) 82%, var(--text)); }
+#dial .cardinal    { fill: var(--faint); }
+#dial .cardinal.north { fill: var(--yellow); }
+#dial .spot-link   { stroke: color-mix(in srgb, var(--text) 22%, transparent); }
+#dial .spot-ray    { stroke: color-mix(in srgb, var(--text) 14%, transparent); }
+#dial .spot-dot    { fill: var(--brown-800); stroke: var(--text-2); }
+#dial .spot-label  { fill: var(--text-2); }
+#dial .arc         { fill: none; stroke: color-mix(in srgb, var(--hot) 50%, transparent); }
+#dial .north-line  { stroke: color-mix(in srgb, var(--yellow) 28%, transparent); }
+#dial .heading     { stroke: var(--hot); }
+#dial .target-halo { fill: color-mix(in srgb, var(--hot) 17%, transparent); }
+#dial .target-dot  { fill: var(--hot); }
+#dial .you-dot     { fill: var(--brown-800); stroke: var(--text); }
+#dial .you-pip     { fill: var(--text); }
+.readouts { display: flex; flex-direction: column; gap: 12px; }
+
+.readout {
+  padding: 14px 18px;
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--yellow) 13%, transparent),
+    color-mix(in srgb, var(--yellow) 5%, transparent));
+  border: 1px solid var(--yellow-edge);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.readout-label {
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--yellow-soft);
+  transition: color 160ms ease;
+}
+.readout-value {
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  color: var(--yellow);
+  margin-top: 2px;
+  transition: color 160ms ease;
+}
+.readout-sub { font-size: 12px; color: var(--muted); margin-top: 3px; font-variant-numeric: tabular-nums; }
+
+.readout.is-out {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--red) 15%, transparent),
+    color-mix(in srgb, var(--red) 5%, transparent));
+  border-color: var(--red-edge);
+}
+.readout.is-out .readout-label { color: var(--red-soft); }
+.readout.is-out .readout-value { color: var(--red-soft); }
+
+/* weapon envelopes ------------------------------------------------ */
+.envelopes { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--brown-850);
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: all 160ms ease;
+}
+.chip .chip-range {
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.chip.is-live {
+  background: var(--yellow-wash);
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+.chip.is-live .chip-range { color: var(--yellow-soft); }
+
+.track-wrap { position: relative; padding-top: 4px; }
+.track {
+  position: relative;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--brown-850);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.band {
+  position: absolute;
+  top: 0; bottom: 0;
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.band.is-live {
+  background: color-mix(in srgb, var(--yellow) 24%, transparent);
+  border-left-color: var(--yellow);
+  border-right-color: var(--yellow);
+}
+.band-tag {
+  position: absolute;
+  left: 7px; top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--muted), var(--faint));
+  white-space: nowrap;
+  transition: color 160ms ease;
+}
+.band.is-live .band-tag { color: var(--yellow); }
+
+.marker {
+  position: absolute;
+  top: -5px; bottom: -5px;
+  width: 2px;
+  background: var(--yellow);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--yellow) 70%, transparent);
+  transition: left 220ms cubic-bezier(.2,.8,.3,1), background 160ms ease;
+  z-index: 3;
+}
+.marker::after {
+  content: "";
+  position: absolute;
+  top: -4px; left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--yellow);
+  transition: border-top-color 160ms ease;
+}
+.marker.is-out { background: var(--red); box-shadow: 0 0 9px color-mix(in srgb, var(--red) 70%, transparent); }
+.marker.is-out::after { border-top-color: var(--red); }
+
+.scale {
+  position: relative;
+  height: 15px;
+  margin-top: 5px;
+  font-size: 10.5px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.scale span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.scale span.edge-l { transform: none; left: 0; }
+.scale span.edge-r { transform: none; right: 0; }
+
+.verdict {
+  margin-top: 13px;
+  padding: 11px 14px;
+  border-radius: var(--r-md);
+  font-size: 13.5px;
+  line-height: 1.5;
+  background: var(--yellow-wash);
+  border: 1px solid var(--yellow-edge);
+  color: var(--yellow-soft);
+}
+.verdict.is-out {
+  background: var(--red-wash);
+  border-color: var(--red-edge);
+  color: var(--red-soft);
+}
+/* empty ----------------------------------------------------------- */
+.empty { padding: 34px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+
+.actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.status { margin-top: 12px; font-size: 13px; color: var(--yellow-soft); min-height: 19px; }
+.status.err { color: var(--red-soft); }
+
+/* collapsibles ---------------------------------------------------- */
+details { border-top: 1px solid var(--line-soft); }
+details:first-of-type { border-top: none; }
+
+summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  transition: color 130ms ease;
+}
+summary::-webkit-details-marker { display: none; }
+summary:hover { color: var(--text); }
+summary:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--yellow-edge); }
+summary .chev {
+  width: 9px; height: 9px;
+  border-right: 2px solid var(--yellow);
+  border-bottom: 2px solid var(--yellow);
+  transform: rotate(-45deg);
+  transition: transform 160ms ease;
+  flex: none;
+}
+details[open] > summary .chev { transform: rotate(45deg); }
+/* keep the focus ring inside the panel's rounded corners */
+.panel > details:first-of-type > summary { border-radius: var(--r-xl) var(--r-xl) 0 0; }
+.panel > details:last-of-type:not([open]) > summary { border-radius: 0 0 var(--r-xl) var(--r-xl); }
+
+.details-body {
+  padding: 0 18px 18px;
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.65;
+  animation: reveal 170ms ease-out;
+}
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.details-body p { margin: 0 0 11px; max-width: 62ch; }
+.details-body p:last-child { margin-bottom: 0; }
+.details-body code {
+  background: var(--brown-750);
+  color: var(--yellow-soft);
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 12.5px;
+}
+
+footer { margin-top: 22px; text-align: center; font-size: 12px; color: color-mix(in srgb, var(--faint) 85%, var(--brown-900)); }
+footer:empty { display: none; }   /* no gap under the page until footer text is added */
+
+/* responsive ------------------------------------------------------ */
+/* Rows and the solution respond to their own panel's width, so they adapt
+   the same way whether the panels are stacked or side by side. */
+@container panel (max-width: 580px) {
+  .row.spotter-detail { grid-template-columns: 112px 1fr 1fr; }
+  .row.spotter-detail .row-label { grid-row: span 2; }
+}
+@container panel (max-width: 500px) {
+  .solution { grid-template-columns: 1fr; gap: 18px; }
+  .readout-value { font-size: 36px; }
+}
+@container panel (max-width: 460px) {
+  .row { grid-template-columns: 1fr 1fr; gap: 9px; padding: 12px 13px; }
+  .row-label { grid-column: 1 / -1; }
+  .row .paste-btn { grid-column: 1 / -1; }
+  .row.spotter-detail { grid-template-columns: 1fr 1fr; }
+  .row.spotter-detail .row-label { grid-row: auto; }
+  .shots { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 620px) {
+  body { padding: 24px 14px; }
+  h1 { font-size: 25px; }
+  .popover { width: min(272px, calc(100vw - 56px)); }
+  .band-tag { font-size: 9.5px; letter-spacing: 0.06em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <h1><span class="slashes">//</span>Wardogs Artillery Rangefinder</h1>
+    <p class="strapline">Bearing and range between two map co-ordinates.</p>
+  </header>
+
+  <div class="duo">
+
+    <!-- ── POSITIONS ─────────────────────────────────────────────── -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Positions</h2>
+        <span class="help-wrap">
+          <button type="button" class="help" data-pop="popPaste" aria-expanded="false" aria-label="What formats can be pasted">?</button>
+          <div class="popover" id="popPaste" role="tooltip">
+            Paste any text with two numbers, like <code>x98.43, y110.38</code>,
+            <code>98.43 110.38</code> or <code>(98.43, 110.38)</code>.
+            Paste four numbers into <strong>You</strong> to fill both rows at once.
+          </div>
+        </span>
+      </div>
+
+      <div class="panel-body">
+        <div class="row" id="rowYou">
+          <span class="row-label">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true" focusable="false">
+              <path d="M2 21.5 H8.5"></path>
+              <path d="M4.2 19.4 L10.6 11.2" stroke-width="2.7"></path>
+              <path d="M9.4 14 L7.2 19.8"></path>
+              <path class="accent" d="M11.8 9.4 C16 4.6 20.8 7.4 21 18" stroke-dasharray="2 2.4" stroke="var(--icon-accent, currentColor)"></path>
+              <circle class="accent" cx="21" cy="20.4" r="1.5" fill="var(--icon-accent, currentColor)" stroke="none"></circle>
+            </svg>
+            You
+          </span>
+          <div class="field">
+            <span class="field-prefix">x</span>
+            <input type="text" inputmode="decimal" id="youX" data-row="you" placeholder="98.43" aria-label="Your x coordinate" autocomplete="off">
+          </div>
+          <div class="field">
+            <span class="field-prefix">y</span>
+            <input type="text" inputmode="decimal" id="youY" data-row="you" placeholder="110.38" aria-label="Your y coordinate" autocomplete="off">
+          </div>
+          <button type="button" class="paste-btn" data-paste="you">Paste</button>
+        </div>
+
+        <div class="row" id="rowTarget">
+          <span class="row-label">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="7"></circle>
+              <path d="M12 1.5 V5"></path>
+              <path d="M12 19 V22.5"></path>
+              <path d="M1.5 12 H5"></path>
+              <path d="M19 12 H22.5"></path>
+              <circle class="accent" cx="12" cy="12" r="1.7" fill="var(--icon-accent, currentColor)" stroke="none"></circle>
+            </svg>
+            Target
+            <span class="help-wrap">
+              <button type="button" class="help" data-pop="popTarget" aria-expanded="false" aria-label="About the target row">?</button>
+              <div class="popover" id="popTarget" role="tooltip">
+                With a spotter on, these fields are locked and show the target worked out
+                from the spotter's call. Check it on the map before firing, as small bearing
+                errors grow with range.
+              </div>
+            </span>
+          </span>
+          <div class="field">
+            <span class="field-prefix">x</span>
+            <input type="text" inputmode="decimal" id="tgtX" data-row="target" placeholder="94.53" aria-label="Target x coordinate" autocomplete="off">
+          </div>
+          <div class="field">
+            <span class="field-prefix">y</span>
+            <input type="text" inputmode="decimal" id="tgtY" data-row="target" placeholder="109.03" aria-label="Target y coordinate" autocomplete="off">
+          </div>
+          <button type="button" class="paste-btn" data-paste="target">Paste</button>
+        </div>
+
+        <div class="spotter-toggle">
+          <label class="check">
+            <input type="checkbox" id="spotterOn">
+            <span class="box"></span>
+            <span>Target called in by a spotter</span>
+          </label>
+          <span class="help-wrap">
+            <button type="button" class="help" data-pop="popSpotter" aria-expanded="false" aria-label="About spotter mode">?</button>
+            <div class="popover align-right" id="popSpotter" role="tooltip">
+              The spotter's bearing and range are turned into target co-ordinates, then the
+              solution is worked out from your position as usual. It still works when you,
+              the spotter and the target are in a line.
+            </div>
+          </span>
+        </div>
+
+        <div class="row spotter-detail is-off" id="rowSpotter">
+          <span class="row-label">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M4.6 12 C8 7.2 16 7.2 19.4 12 C16 16.8 8 16.8 4.6 12 Z"></path>
+              <circle class="accent" cx="12" cy="12" r="1.8" fill="var(--icon-accent, currentColor)" stroke="none"></circle>
+            </svg>
+            Spotter
+          </span>
+          <div class="field">
+            <span class="field-prefix">x</span>
+            <input type="text" inputmode="decimal" id="spX" data-row="spotter" placeholder="101.20" aria-label="Spotter x coordinate" autocomplete="off" disabled>
+          </div>
+          <div class="field">
+            <span class="field-prefix">y</span>
+            <input type="text" inputmode="decimal" id="spY" data-row="spotter" placeholder="112.50" aria-label="Spotter y coordinate" autocomplete="off" disabled>
+          </div>
+          <div class="field">
+            <span class="field-prefix">brg</span>
+            <input type="text" inputmode="decimal" id="spBrg" placeholder="235" aria-label="Bearing reported by the spotter, in degrees" autocomplete="off" disabled>
+            <span class="field-suffix" id="spBrgDir"></span>
+          </div>
+          <div class="field">
+            <span class="field-prefix">rng</span>
+            <input type="text" inputmode="decimal" id="spRng" placeholder="650" aria-label="Range reported by the spotter, in metres" autocomplete="off" disabled>
+            <span class="field-suffix">M</span>
+          </div>
+        </div>
+
+        <div class="status" id="status" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ── SOLUTION ──────────────────────────────────────────────── -->
+    <section class="panel">
+      <div class="panel-head"><h2>Artillery Rangefinder</h2></div>
+      <div class="panel-body">
+
+        <div class="empty" id="empty">
+          Enter both positions to get a bearing and range.
+        </div>
+
+        <div id="solutionWrap" hidden>
+          <div class="solution">
+            <div class="dial-wrap">
+              <svg id="dial" width="232" height="232" viewBox="0 0 232 232" role="img" aria-labelledby="dialTitle">
+                <title id="dialTitle">Target position plotted relative to you</title>
+              </svg>
+            </div>
+
+            <div class="readouts">
+              <div class="readout" id="bearingCard">
+                <div class="readout-label">Bearing</div>
+                <div class="readout-value" id="outBearing">—</div>
+                <div class="readout-sub" id="outBearingSub"></div>
+              </div>
+              <div class="readout" id="rangeCard">
+                <div class="readout-label">Range</div>
+                <div class="readout-value" id="outRange">—</div>
+                <div class="readout-sub" id="outRangeSub"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="envelopes">
+            <div class="chips">
+              <span class="chip" id="chipMortar">L81 Mortar <span class="chip-range">52–685 M</span></span>
+              <span class="chip" id="chipArty">SPH-2 Artillery <span class="chip-range">745–2660 M</span></span>
+            </div>
+
+            <div class="track-wrap">
+              <div class="track" id="track">
+                <div class="band" id="bandMortar"><span class="band-tag">L81</span></div>
+                <div class="band" id="bandArty"><span class="band-tag">SPH-2</span></div>
+                <div class="marker" id="marker" style="left:0%"></div>
+              </div>
+              <div class="scale" id="scale"></div>
+            </div>
+
+            <div class="verdict" id="verdict"></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-primary btn-sm" id="copyBtn" disabled>Copy bearing/range</button>
+          <button type="button" class="btn btn-sm" id="clearBtn">Clear all</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ── WORKINGS ──────────────────────────────────────────────── -->
+  <section class="panel">
+    <details name="guide">
+      <summary><span class="chev"></span>How to use</summary>
+      <div class="details-body">
+        <ol class="howto">
+          <li>
+            <button type="button" class="howto-link" id="copyHowtoBtn" aria-expanded="false" aria-controls="copyHowto">Copy<span class="chev-sm" aria-hidden="true"></span></button>
+            and paste or type co-ordinates into the <strong>You</strong> row.
+            <div class="shots" id="copyHowto" hidden>
+              <figure class="shot">
+                <div class="shot-frame" data-label="Screenshot 1">
+                  <img src="images/wardogs-howto-1.webp" alt="Finding the target position on the in-game map">
+                </div>
+                <figcaption>Find your target position on the map <kbd>M</kbd></figcaption>
+              </figure>
+              <figure class="shot">
+                <div class="shot-frame" data-label="Screenshot 2">
+                  <img src="images/wardogs-howto-2.webp" alt="Right-clicking the map to mark co-ordinates">
+                </div>
+                <figcaption>Right-click on the map and mark co-ordinates</figcaption>
+              </figure>
+              <figure class="shot">
+                <div class="shot-frame" data-label="Screenshot 3">
+                  <img src="images/wardogs-howto-3.webp" alt="Selecting and copying the marked co-ordinates">
+                </div>
+                <figcaption><kbd>CTRL</kbd>+<kbd>A</kbd> to select and <kbd>CTRL</kbd>+<kbd>C</kbd> to copy</figcaption>
+              </figure>
+            </div>
+          </li>
+          <li>Do the same for the <strong>Target</strong> row, or tick the spotter box and enter their call.</li>
+          <li>Read the bearing and range in the <strong>Artillery Rangefinder</strong> panel, then press <strong>Copy bearing/range</strong> to share with your team.</li>
+          <li>Pasting <code>x98.43, y110.38</code> fills both fields and moves to the next row.</li>
+        </ol>
+      </div>
+    </details>
+
+    <details name="guide">
+      <summary><span class="chev"></span>How this is worked out</summary>
+      <div class="details-body">
+        <p>Range uses Pythagoras. Subtract the positions to get <code>dx</code> and <code>dy</code>, square and add them, take the square root, then multiply by 100 for metres.</p>
+        <p>Bearing uses <code>atan2(dx, dy)</code>, with x first and y second. This gives degrees clockwise from north, as the guns use. Negative results have 360 added.</p>
+        <p>Always subtract <em>target minus you</em>, or the bearing is reversed. The range is the same either way. The grid assumes y increases towards north.</p>
+        <p>Grid solutions only. No elevation, drift or charge tables.</p>
+        <p id="mathLive"></p>
+      </div>
+    </details>
+
+    <details name="guide">
+      <summary><span class="chev"></span>How a spotter call is converted</summary>
+      <div class="details-body">
+        <p>The spotter's bearing and range are turned into target co-ordinates: <code>x = sx + r·sin(θ)</code> and <code>y = sy + r·cos(θ)</code>, where <code>r</code> is their range in grid units. This mirrors the bearing formula, so the two always agree.</p>
+        <p>Those co-ordinates then go through the normal calculation from your position.</p>
+        <p>Accuracy depends on the spotter's call. At 650 M, one degree off puts the target about 11 M to the side. If you are closer to the target than the spotter, that error throws your bearing off by more.</p>
+      </div>
+    </details>
+
+    <details name="guide">
+      <summary><span class="chev"></span>Weapon envelopes</summary>
+      <div class="details-body">
+        <p>The <strong>L81 Mortar</strong> fires from 52 M to 685 M. The <strong>SPH-2 Artillery</strong> fires from 745 M to 2660 M.</p>
+        <p>Targets from 686 M to 744 M fall in a dead band: too far for the mortar and too close for the artillery. Move the gun to get in range.</p>
+        <p>Range is measured flat across the grid. Elevation, drift and charge are not included.</p>
+      </div>
+    </details>
+  </section>
+
+  <footer></footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+
+  const el = {
+    youX: $("youX"), youY: $("youY"),
+    tgtX: $("tgtX"), tgtY: $("tgtY"),
+    spX: $("spX"), spY: $("spY"), spBrg: $("spBrg"), spRng: $("spRng"), spBrgDir: $("spBrgDir"),
+    spotterOn: $("spotterOn"),
+    rowYou: $("rowYou"), rowTarget: $("rowTarget"), rowSpotter: $("rowSpotter"),
+    empty: $("empty"), solutionWrap: $("solutionWrap"), dial: $("dial"),
+    outBearing: $("outBearing"), outBearingSub: $("outBearingSub"),
+    outRange: $("outRange"), outRangeSub: $("outRangeSub"),
+    rangeCard: $("rangeCard"),
+    chipMortar: $("chipMortar"), chipArty: $("chipArty"),
+    bandMortar: $("bandMortar"), bandArty: $("bandArty"),
+    marker: $("marker"), scale: $("scale"), verdict: $("verdict"),
+    status: $("status"), mathLive: $("mathLive"), copyBtn: $("copyBtn")
+  };
+
+  const METRES_PER_UNIT = 100;
+
+  const MORTAR = { name: "L81 Mortar", min: 52, max: 685 };
+  const ARTY   = { name: "SPH-2 Artillery", min: 745, max: 2660 };
+  const TRACK_MAX = 2800;   // metres shown across the full width
+
+  let lastSolution = null;
+
+  // Copying only makes sense once there is a complete bearing and range.
+  function setSolution(sol) {
+    lastSolution = sol;
+    el.copyBtn.disabled = !sol;
+  }
+
+  /* ---------- helpers ---------- */
+
+  const num = (input) => {
+    const v = parseFloat(String(input.value).replace(/[^0-9.\-]/g, ""));
+    return Number.isFinite(v) ? v : null;
+  };
+
+  const pct = (m) => Math.max(0, Math.min(100, (m / TRACK_MAX) * 100));
+
+  function say(msg, isError) {
+    el.status.textContent = msg || "";
+    el.status.classList.toggle("err", !!isError);
+  }
+
+  function bearingText(deg) {
+    return String(Math.round(deg) % 360).padStart(3, "0");
+  }
+
+  // Eight 45° sectors centred on the compass points, split on the exact bearing:
+  // 22.4 is N (shown 022), 22.5 is NE (shown 023), so the letters always match the digits.
+  const sector = (deg) => Math.round(deg / 45) % 8;
+
+  function compassPoint(deg) {
+    const pts = ["north","north-east","east","south-east","south","south-west","west","north-west"];
+    return pts[sector(deg)];
+  }
+
+  function compassAbbr(deg) {
+    return ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][sector(deg)];
+  }
+
+  /* ---------- pasting ---------- */
+
+  function numbersIn(text) {
+    const found = String(text).match(/-?\d+(?:\.\d+)?/g);
+    return found ? found.map(Number) : [];
+  }
+
+  function fillRow(row, x, y) {
+    if (row === "you")     { el.youX.value = x; el.youY.value = y; }
+    if (row === "target")  { el.tgtX.value = x; el.tgtY.value = y; }
+    if (row === "spotter") { el.spX.value = x;  el.spY.value = y;  }
+  }
+
+  function nextField(row) {
+    if (row === "you") return el.spotterOn.checked ? el.spX : el.tgtX;
+    if (row === "target") return null;
+    if (row === "spotter") return el.spBrg;
+    return null;
+  }
+
+  function handlePastedText(row, text) {
+    const n = numbersIn(text);
+    if (n.length < 2) return false;
+
+    if (row === "you" && n.length >= 4 && !el.spotterOn.checked) {
+      fillRow("you", n[0], n[1]);
+      fillRow("target", n[2], n[3]);
+      say("Both positions filled.");
+      recalc();
+      return true;
+    }
+
+    fillRow(row, n[0], n[1]);
+    const nxt = nextField(row);
+    if (nxt && !nxt.disabled && !nxt.readOnly) {
+      nxt.focus();
+      nxt.select();
+      say("Co-ordinates filled. Moved to the next field.");
+    } else {
+      say("Co-ordinates filled.");
+    }
+    recalc();
+    return true;
+  }
+
+  document.querySelectorAll("input[data-row]").forEach((input) => {
+    input.addEventListener("paste", (ev) => {
+      const text = (ev.clipboardData || window.clipboardData).getData("text");
+      if (handlePastedText(input.dataset.row, text)) ev.preventDefault();
+    });
+  });
+
+  document.querySelectorAll(".paste-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (!handlePastedText(btn.dataset.paste, text)) {
+          say("No co-ordinates found on the clipboard.", true);
+        }
+      } catch (e) {
+        say("Clipboard blocked by the browser. Paste into a field instead.", true);
+      }
+    });
+  });
+
+  /* ---------- maths ---------- */
+
+  function solve(you, target) {
+    const dx = target.x - you.x;
+    const dy = target.y - you.y;
+    const units = Math.hypot(dx, dy);
+    let bearing = Math.atan2(dx, dy) * 180 / Math.PI;
+    if (bearing < 0) bearing += 360;
+    return { dx, dy, units, metres: units * METRES_PER_UNIT, bearing };
+  }
+
+  function targetFromSpotter(sp, bearingDeg, rangeM) {
+    const r = rangeM / METRES_PER_UNIT;
+    const rad = bearingDeg * Math.PI / 180;
+    return { x: sp.x + r * Math.sin(rad), y: sp.y + r * Math.cos(rad) };
+  }
+
+  /* ---------- weapon envelope check ---------- */
+
+  function assess(m) {
+    const inMortar = m >= MORTAR.min && m <= MORTAR.max;
+    const inArty   = m >= ARTY.min   && m <= ARTY.max;
+
+    if (inMortar) {
+      return { ok: true, weapon: MORTAR, inMortar, inArty,
+        text: "In range for the <strong>L81 Mortar</strong>. " +
+              Math.round(MORTAR.max - m) + " M below max range." };
+    }
+    if (inArty) {
+      return { ok: true, weapon: ARTY, inMortar, inArty,
+        text: "In range for the <strong>SPH-2 Artillery</strong>. " +
+              Math.round(m - ARTY.min) + " M above min range." };
+    }
+
+    if (m < MORTAR.min) {
+      return { ok: false, inMortar, inArty,
+        text: "<strong>Too close.</strong> The L81 needs at least " + MORTAR.min +
+              " M. Move back " + Math.ceil(MORTAR.min - m) + " M." };
+    }
+    if (m > MORTAR.max && m < ARTY.min) {
+      return { ok: false, inMortar, inArty,
+        text: "<strong>Dead band.</strong> Too far for the L81 (max " + MORTAR.max +
+              " M) and too close for the SPH-2 (min " + ARTY.min + " M). Move " +
+              Math.ceil(m - MORTAR.max) + " M closer for the mortar or " +
+              Math.ceil(ARTY.min - m) + " M back for the artillery." };
+    }
+    return { ok: false, inMortar, inArty,
+      text: "<strong>Out of range.</strong> The SPH-2 reaches " + ARTY.max +
+            " M. Move " + Math.ceil(m - ARTY.max) + " M closer." };
+  }
+
+  function paintEnvelopes(m, a) {
+    el.chipMortar.classList.toggle("is-live", a.inMortar);
+    el.chipArty.classList.toggle("is-live", a.inArty);
+    el.bandMortar.classList.toggle("is-live", a.inMortar);
+    el.bandArty.classList.toggle("is-live", a.inArty);
+
+    el.marker.style.left = pct(m) + "%";
+    el.marker.classList.toggle("is-out", !a.ok);
+
+    el.rangeCard.classList.toggle("is-out", !a.ok);
+
+    el.verdict.innerHTML = a.text;
+    el.verdict.classList.toggle("is-out", !a.ok);
+  }
+
+  function layoutTrack() {
+    el.bandMortar.style.left  = pct(MORTAR.min) + "%";
+    el.bandMortar.style.width = (pct(MORTAR.max) - pct(MORTAR.min)) + "%";
+    el.bandArty.style.left    = pct(ARTY.min) + "%";
+    el.bandArty.style.width   = (pct(ARTY.max) - pct(ARTY.min)) + "%";
+
+    el.scale.innerHTML =
+      '<span class="edge-l">0 M</span>' +
+      '<span style="left:' + pct(MORTAR.max) + '%">' + MORTAR.max + '</span>' +
+      '<span style="left:' + pct(ARTY.min) + '%">' + ARTY.min + '</span>' +
+      '<span class="edge-r">' + ARTY.max + ' M</span>';
+  }
+
+  /* ---------- spotter ---------- */
+
+  // Compass letters beside the spotter's bearing, e.g. 235 shows SW.
+  function updateBearingSuffix() {
+    const brg = num(el.spBrg);
+    el.spBrgDir.textContent = brg !== null && brg >= 0 && brg <= 360 ? compassAbbr(brg) : "";
+  }
+
+  function setSpotterEnabled(on) {
+    [el.spX, el.spY, el.spBrg, el.spRng].forEach((i) => { i.disabled = !on; });
+    el.rowSpotter.classList.toggle("is-off", !on);
+
+    el.tgtX.readOnly = on;
+    el.tgtY.readOnly = on;
+    el.rowTarget.classList.toggle("is-derived", on);
+    document.querySelector('.paste-btn[data-paste="target"]').disabled = on;
+
+    if (on && !el.spX.value) el.spX.focus();
+    recalc();
+  }
+
+  el.spotterOn.addEventListener("change", () => {
+    setSpotterEnabled(el.spotterOn.checked);
+    say(el.spotterOn.checked
+      ? "Spotter on. Target co-ordinates now come from the spotter's call."
+      : "Spotter off. Enter the target co-ordinates.");
+  });
+
+  /* ---------- recalc ---------- */
+
+  function recalc() {
+    updateBearingSuffix();
+
+    const you = { x: num(el.youX), y: num(el.youY) };
+    const youOK = you.x !== null && you.y !== null;
+    el.rowYou.classList.toggle("is-filled", youOK);
+
+    let target = null;
+
+    if (el.spotterOn.checked) {
+      const sp = { x: num(el.spX), y: num(el.spY) };
+      const brg = num(el.spBrg);
+      const rng = num(el.spRng);
+      const spOK = sp.x !== null && sp.y !== null && brg !== null && rng !== null;
+      el.rowSpotter.classList.toggle("is-filled", spOK);
+
+      const brgBad = brg !== null && (brg < 0 || brg > 360);
+      const rngBad = rng !== null && rng <= 0;
+      el.spBrg.classList.toggle("is-bad", brgBad);
+      el.spRng.classList.toggle("is-bad", rngBad);
+
+      if (spOK && !brgBad && !rngBad) {
+        target = targetFromSpotter(sp, brg, rng);
+        el.tgtX.value = target.x.toFixed(2);
+        el.tgtY.value = target.y.toFixed(2);
+      } else {
+        el.tgtX.value = "";
+        el.tgtY.value = "";
+      }
+    } else {
+      const t = { x: num(el.tgtX), y: num(el.tgtY) };
+      if (t.x !== null && t.y !== null) target = t;
+    }
+
+    el.rowTarget.classList.toggle("is-filled", !!target);
+
+    if (!youOK || !target) {
+      el.solutionWrap.hidden = true;
+      el.empty.hidden = false;
+      setSolution(null);
+      el.mathLive.textContent = "";
+      return;
+    }
+
+    const s = solve(you, target);
+
+    if (s.units === 0) {
+      el.solutionWrap.hidden = true;
+      el.empty.hidden = false;
+      say("You and the target are on the same spot.", true);
+      setSolution(null);
+      return;
+    }
+
+    el.empty.hidden = true;
+    el.solutionWrap.hidden = false;
+
+    el.outBearing.textContent = bearingText(s.bearing) + " " + compassAbbr(s.bearing);
+    el.outBearingSub.textContent = s.bearing.toFixed(2) + "° true · " + compassPoint(s.bearing);
+
+    el.outRange.textContent = Math.round(s.metres).toLocaleString() + " M";
+    el.outRangeSub.textContent = s.units.toFixed(4) + " grid units · dx " +
+      s.dx.toFixed(2) + ", dy " + s.dy.toFixed(2);
+
+    const a = assess(s.metres);
+    paintEnvelopes(s.metres, a);
+
+    el.mathLive.innerHTML = "Right now: <code>" + s.dx.toFixed(2) + "² + " + s.dy.toFixed(2) +
+      "² = " + (s.dx * s.dx + s.dy * s.dy).toFixed(4) + "</code>, square root <code>" +
+      s.units.toFixed(5) + "</code>, times 100 = <code>" + s.metres.toFixed(1) + " M</code>.";
+
+    setSolution({ you, target, s, a });
+    drawDial(you, s);
+  }
+
+  /* ---------- dial ---------- */
+
+  const NS = "http://www.w3.org/2000/svg";
+  function mk(tag, attrs) {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+
+  function drawDial(you, s) {
+    const svg = el.dial;
+    while (svg.childNodes.length > 1) svg.removeChild(svg.lastChild);
+
+    const cx = 116, cy = 116, R = 96, plotR = 78;
+    // Colours live in the #dial CSS rules; is-out swaps the accent to red.
+    svg.classList.toggle("is-out", !!(lastSolution && !lastSolution.a.ok));
+
+    svg.appendChild(mk("circle", { class: "face", cx, cy, r: R, "stroke-width": 1 }));
+    svg.appendChild(mk("circle", { class: "ring", cx, cy, r: plotR * 0.5,
+      "stroke-width": 1, "stroke-dasharray": "2 4" }));
+
+    for (let a = 0; a < 360; a += 15) {
+      const major = a % 45 === 0;
+      const rad = a * Math.PI / 180;
+      const r1 = R - (major ? 9 : 4);
+      svg.appendChild(mk("line", {
+        class: major ? "tick major" : "tick",
+        x1: cx + r1 * Math.sin(rad), y1: cy - r1 * Math.cos(rad),
+        x2: cx + R * Math.sin(rad), y2: cy - R * Math.cos(rad),
+        "stroke-width": major ? 1.5 : 1
+      }));
+    }
+
+    [["N", 0], ["E", 90], ["S", 180], ["W", 270]].forEach(([lab, a]) => {
+      const rad = a * Math.PI / 180, lr = R - 20;
+      const t = mk("text", {
+        class: lab === "N" ? "cardinal north" : "cardinal",
+        x: cx + lr * Math.sin(rad), y: cy - lr * Math.cos(rad) + 4,
+        "text-anchor": "middle",
+        "font-family": "'Saira Condensed', sans-serif",
+        "font-size": 13, "font-weight": 600, "letter-spacing": "0.08em"
+      });
+      t.textContent = lab;
+      svg.appendChild(t);
+    });
+
+    let maxD = s.units;
+    let spSol = null;
+
+    if (el.spotterOn.checked) {
+      const sp = { x: num(el.spX), y: num(el.spY) };
+      if (sp.x !== null && sp.y !== null) {
+        spSol = solve(you, sp);
+        maxD = Math.max(maxD, spSol.units);
+      }
+    }
+
+    const place = (bearing, d) => {
+      const rad = bearing * Math.PI / 180;
+      const r = (d / maxD) * plotR;
+      return { x: cx + r * Math.sin(rad), y: cy - r * Math.cos(rad) };
+    };
+
+    const tg = place(s.bearing, s.units);
+
+    if (spSol && spSol.units > 0) {
+      const sp = place(spSol.bearing, spSol.units);
+      svg.appendChild(mk("line", { class: "spot-link", x1: sp.x, y1: sp.y, x2: tg.x, y2: tg.y,
+        "stroke-width": 1.5, "stroke-dasharray": "3 4" }));
+      svg.appendChild(mk("line", { class: "spot-ray", x1: cx, y1: cy, x2: sp.x, y2: sp.y,
+        "stroke-width": 1 }));
+      svg.appendChild(mk("circle", { class: "spot-dot", cx: sp.x, cy: sp.y, r: 4.5,
+        "stroke-width": 1.8 }));
+      const lab = mk("text", { class: "spot-label", x: sp.x, y: sp.y - 10, "text-anchor": "middle",
+        "font-family": "'Saira Condensed', sans-serif", "font-size": 10,
+        "letter-spacing": "0.1em" });
+      lab.textContent = "SPOT";
+      svg.appendChild(lab);
+    }
+
+    const arcR = 34;
+    const endRad = s.bearing * Math.PI / 180;
+    const large = s.bearing > 180 ? 1 : 0;
+    svg.appendChild(mk("path", {
+      class: "arc",
+      d: "M " + cx + " " + (cy - arcR) + " A " + arcR + " " + arcR + " 0 " + large + " 1 " +
+         (cx + arcR * Math.sin(endRad)) + " " + (cy - arcR * Math.cos(endRad)),
+      "stroke-width": 2
+    }));
+
+    svg.appendChild(mk("line", { class: "north-line", x1: cx, y1: cy - plotR - 6, x2: cx, y2: cy,
+      "stroke-width": 1, "stroke-dasharray": "3 3" }));
+
+    svg.appendChild(mk("line", { class: "heading", x1: cx, y1: cy, x2: tg.x, y2: tg.y,
+      "stroke-width": 2.5, "stroke-linecap": "round" }));
+
+    svg.appendChild(mk("circle", { class: "target-halo", cx: tg.x, cy: tg.y, r: 9 }));
+    svg.appendChild(mk("circle", { class: "target-dot", cx: tg.x, cy: tg.y, r: 4.5 }));
+
+    svg.appendChild(mk("circle", { class: "you-dot", cx, cy, r: 5.5, "stroke-width": 2 }));
+    svg.appendChild(mk("circle", { class: "you-pip", cx, cy, r: 1.6 }));
+  }
+
+  /* ---------- popovers ---------- */
+
+  function closeAllPopovers() {
+    document.querySelectorAll(".popover[data-open='true']").forEach((p) => {
+      p.dataset.open = "false";
+      const trig = document.querySelector('.help[data-pop="' + p.id + '"]');
+      if (trig) trig.setAttribute("aria-expanded", "false");
+    });
+  }
+
+  // Shift an open popover sideways if it would run off the edge of the screen.
+  function keepOnScreen(pop) {
+    pop.style.removeProperty("--nudge");
+    const box = pop.getBoundingClientRect();
+    const gutter = 12;
+    const right = document.documentElement.clientWidth - gutter;
+    let nudge = 0;
+    if (box.left < gutter) nudge = gutter - box.left;
+    else if (box.right > right) nudge = right - box.right;
+    if (nudge) pop.style.setProperty("--nudge", Math.round(nudge) + "px");
+  }
+
+  document.querySelectorAll(".help").forEach((btn) => {
+    btn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      const pop = document.getElementById(btn.dataset.pop);
+      const open = pop.dataset.open === "true";
+      closeAllPopovers();
+      pop.dataset.open = String(!open);
+      btn.setAttribute("aria-expanded", String(!open));
+      if (!open) keepOnScreen(pop);
+    });
+  });
+
+  document.addEventListener("click", (ev) => {
+    if (!ev.target.closest(".popover")) closeAllPopovers();
+  });
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") closeAllPopovers();
+  });
+
+  /* ---------- how-to screenshots ---------- */
+
+  const copyHowtoBtn = $("copyHowtoBtn");
+  const copyHowto = $("copyHowto");
+
+  copyHowtoBtn.addEventListener("click", () => {
+    const open = copyHowtoBtn.getAttribute("aria-expanded") !== "true";
+    copyHowtoBtn.setAttribute("aria-expanded", String(open));
+    copyHowto.hidden = !open;
+  });
+
+  // Until a screenshot exists, hide the broken image so the placeholder shows.
+  copyHowto.querySelectorAll("img").forEach((img) => {
+    const missing = () => { img.hidden = true; };
+    img.addEventListener("error", missing);
+    if (img.complete && img.naturalWidth === 0) missing();
+  });
+
+  /* ---------- actions ---------- */
+
+  el.copyBtn.addEventListener("click", async () => {
+    if (!lastSolution) return;
+    const { s } = lastSolution;
+    const text = "Bearing " + bearingText(s.bearing) + " " + compassAbbr(s.bearing) +
+                 " — Range (RNG) " + Math.round(s.metres) + " M";
+    try {
+      await navigator.clipboard.writeText(text);
+      say("Copied: " + text);
+    } catch (e) {
+      say("Clipboard blocked by the browser. Read the solution from the screen.", true);
+    }
+  });
+
+  $("clearBtn").addEventListener("click", () => {
+    [el.youX, el.youY, el.tgtX, el.tgtY, el.spX, el.spY, el.spBrg, el.spRng]
+      .forEach((i) => { i.value = ""; i.classList.remove("is-bad"); });
+    el.spotterOn.checked = false;
+    setSpotterEnabled(false);
+    say("Cleared.");
+    el.youX.focus();
+  });
+
+  /* ---------- wiring ---------- */
+
+  [el.youX, el.youY, el.tgtX, el.tgtY, el.spX, el.spY, el.spBrg, el.spRng]
+    .forEach((i) => i.addEventListener("input", recalc));
+
+  document.querySelectorAll("input[data-row]").forEach((i) => {
+    i.addEventListener("focus", () => {
+      document.querySelectorAll(".row").forEach((r) => r.classList.remove("is-active"));
+      const row = i.closest(".row");
+      if (row) row.classList.add("is-active");
+    });
+    i.addEventListener("blur", () => {
+      const row = i.closest(".row");
+      if (row) setTimeout(() => row.classList.remove("is-active"), 60);
+    });
+  });
+
+  document.querySelectorAll("input[type='text']").forEach((i) => {
+    i.addEventListener("keydown", (ev) => {
+      if (ev.key !== "Enter") return;
+      ev.preventDefault();
+      const all = Array.from(document.querySelectorAll("input[type='text']"))
+        .filter((x) => !x.disabled && !x.readOnly && x.offsetParent !== null);
+      const idx = all.indexOf(i);
+      if (idx > -1 && idx < all.length - 1) all[idx + 1].focus();
+      else i.blur();
+    });
+  });
+
+  layoutTrack();
+  setSpotterEnabled(false);
+  recalc();
+})();
+</script>
+</body>
+</html>
