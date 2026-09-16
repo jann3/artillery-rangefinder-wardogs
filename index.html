@@ -328,7 +328,9 @@ header {
 .row.is-derived { border-left-color: var(--yellow-soft); background: color-mix(in srgb, var(--yellow) 4.5%, transparent); }
 /* spotter on: mute the target title so the two inputs read as either/or */
 .row.is-derived .row-label { color: var(--muted); --icon-color: var(--muted); --icon-accent: var(--muted); }
-.row.is-off { opacity: 0.42; }.row.spotter-detail { grid-template-columns: 112px repeat(4, 1fr); }
+.row.is-off { opacity: 0.42; }
+/* trailing auto column matches .row, so the paste button sits beside the fields */
+.row.spotter-detail { grid-template-columns: 112px repeat(4, 1fr) auto; }
 
 .row-label {
   font-family: 'Saira Condensed', sans-serif;
@@ -483,6 +485,11 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
 .help-wrap { position: relative; display: inline-flex; }
 .help {
   width: 17px; height: 17px;
+  /* Chrome's UA stylesheet gives buttons padding-inline: 6px, leaving only a 3px
+     content box inside this 17px circle. The ~6px glyph cannot centre in 3px, so
+     Chrome pins it to the start edge and it spills right; Firefox overflows it
+     evenly and looks centred. Zeroing the padding centres it the same in both. */
+  padding: 0;
   border-radius: 50%;
   border: 1px solid var(--line);
   background: var(--brown-750);
@@ -811,8 +818,11 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
 /* Rows and the solution respond to their own panel's width, so they adapt
    the same way whether the panels are stacked or side by side. */
 @container panel (max-width: 580px) {
-  .row.spotter-detail { grid-template-columns: 112px 1fr 1fr; }
+  /* trailing auto column keeps the button inline with x and y, as in .row */
+  .row.spotter-detail { grid-template-columns: 112px 1fr 1fr auto; }
   .row.spotter-detail .row-label { grid-row: span 2; }
+  /* pinned to row 1 so brg and rng wrap underneath x and y, not around the button */
+  .row.spotter-detail .paste-btn { grid-column: 4; grid-row: 1; }
 }
 @container panel (max-width: 500px) {
   .solution { grid-template-columns: 1fr; gap: 18px; }
@@ -824,6 +834,9 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
   .row .paste-btn { grid-column: 1 / -1; }
   .row.spotter-detail { grid-template-columns: 1fr 1fr; }
   .row.spotter-detail .row-label { grid-row: auto; }
+  /* stacked layout: full width like every other row's button. grid-row is reset
+     so the wider breakpoint above does not leave it pinned to row 1. */
+  .row.spotter-detail .paste-btn { grid-column: 1 / -1; grid-row: auto; justify-self: stretch; }
   .shots { grid-template-columns: minmax(0, 1fr); }
 }
 
@@ -963,6 +976,7 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
             <input type="text" inputmode="decimal" id="spRng" placeholder="650" aria-label="Range reported by the spotter, in metres" autocomplete="off" disabled>
             <span class="field-suffix">M</span>
           </div>
+          <button type="button" class="paste-btn" data-paste="spotter" aria-label="Paste spotter co-ordinates" disabled>Paste</button>
         </div>
 
         <div class="status" id="status" role="status" aria-live="polite"></div>
@@ -1326,6 +1340,7 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
     el.tgtY.readOnly = on;
     el.rowTarget.classList.toggle("is-derived", on);
     document.querySelector('.paste-btn[data-paste="target"]').disabled = on;
+    document.querySelector('.paste-btn[data-paste="spotter"]').disabled = !on;
 
     if (on && !el.spX.value) el.spX.focus();
     recalc();
