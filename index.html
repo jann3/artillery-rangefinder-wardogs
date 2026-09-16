@@ -10,17 +10,28 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="canonical" href="https://janne.dev/rangefinder/">
+<script>
+/* Picks the backdrop for this load. Runs before first paint, so the
+   fallback in --bg-image below is only ever seen without JS. */
+(function () {
+  "use strict";
+  var n = 1 + Math.floor(Math.random() * 3);
+  document.documentElement.style.setProperty("--bg-image", "url('images/background" + n + ".webp')");
+})();
+</script>
 <style>
 /* ============================================================
    BACKGROUND IMAGE
-   Put your image in /images and set the filename below.
+   One of images/background1-3.webp is picked per load by the
+   script in <head>; the line below is the no-JS fallback.
    Delete the line to fall back to the gradient.
    ============================================================ */
 :root {
-  --bg-image: url('images/bg.webp');
+  --bg-image: url('images/background1.webp');
   --bg-brightness: 0.65;       /* 1 = image at full brightness */
   --bg-overlay-top: 38.5%;     /* dark overlay strength, top of screen */
   --bg-overlay-bottom: 57.4%;  /* dark overlay strength, bottom of screen */
+  --bg-fade: 2s;               /* how long the backdrop takes to fade in */
 }
 
 /* ============================================================
@@ -113,6 +124,15 @@ body::before {
   background-repeat: no-repeat;
   filter: blur(34px) saturate(0.7) brightness(var(--bg-brightness));
   transform: scale(1.06);
+  /* resolve out of the flat page colour rather than snapping in */
+  animation: bg-fade-in var(--bg-fade) ease-in-out forwards;
+}
+@keyframes bg-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation-duration: 0s; }
 }
 body::after {
   content: "";
@@ -543,6 +563,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
 #dial .tick.major  { stroke: color-mix(in srgb, var(--line) 82%, var(--text)); }
 #dial .cardinal    { fill: var(--faint); }
 #dial .cardinal.north { fill: var(--yellow); }
+#dial .cardinal.ordinal { fill: color-mix(in srgb, var(--faint) 72%, transparent); }
 #dial .spot-link   { stroke: color-mix(in srgb, var(--text) 22%, transparent); }
 #dial .spot-ray    { stroke: color-mix(in srgb, var(--text) 14%, transparent); }
 #dial .spot-dot    { fill: var(--brown-800); stroke: var(--text-2); }
@@ -601,8 +622,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
 .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .chip {
   display: inline-flex;
-  align-items: baseline;
-  gap: 7px;
+  align-items: center;
   padding: 6px 13px;
   border-radius: 999px;
   border: 1px solid var(--line);
@@ -615,23 +635,14 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   color: var(--muted);
   transition: all 160ms ease;
 }
-.chip .chip-range {
-  font-family: 'Inter', sans-serif;
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
-}
 .chip.is-live {
   background: var(--yellow-wash);
   border-color: var(--yellow);
   color: var(--yellow);
 }
-.chip.is-live .chip-range { color: var(--yellow-soft); }
 
-.track-wrap { position: relative; padding-top: 4px; }
+/* padding-top clears the marker notch, which sits above the track */
+.track-wrap { position: relative; padding-top: 12px; }
 .track {
   position: relative;
   height: 26px;
@@ -669,17 +680,19 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
 
 .marker {
   position: absolute;
-  top: -5px; bottom: -5px;
+  top: 12px;      /* top of the track */
+  height: 26px;   /* matches .track, so the line spans the band exactly */
   width: 2px;
   background: var(--yellow);
   box-shadow: 0 0 9px color-mix(in srgb, var(--yellow) 70%, transparent);
   transition: left 220ms cubic-bezier(.2,.8,.3,1), background 160ms ease;
   z-index: 3;
 }
+/* the notch, pointing down at the exact range within the band */
 .marker::after {
   content: "";
   position: absolute;
-  top: -4px; left: 50%;
+  top: -8px; left: 50%;
   transform: translateX(-50%);
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
@@ -700,6 +713,10 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
 .scale span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .scale span.edge-l { transform: none; left: 0; }
 .scale span.edge-r { transform: none; right: 0; }
+/* 685 and 745 are only ~2% apart and would collide when centred on their
+   ticks, so face them outward from the dead zone between the two bands */
+.scale span.pair-l { transform: translateX(calc(-100% - 3px)); }
+.scale span.pair-r { transform: translateX(3px); }
 
 .verdict {
   margin-top: 13px;
@@ -985,16 +1002,17 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
 
           <div class="envelopes">
             <div class="chips">
-              <span class="chip" id="chipMortar">L81 Mortar <span class="chip-range">52–685 M</span></span>
-              <span class="chip" id="chipArty">SPH-2 Artillery <span class="chip-range">745–2660 M</span></span>
+              <span class="chip" id="chipMortar">L81 Mortar</span>
+              <span class="chip" id="chipArty">SPH-2 Artillery</span>
             </div>
 
             <div class="track-wrap">
               <div class="track" id="track">
                 <div class="band" id="bandMortar"><span class="band-tag">L81</span></div>
                 <div class="band" id="bandArty"><span class="band-tag">SPH-2</span></div>
-                <div class="marker" id="marker" style="left:0%"></div>
               </div>
+              <!-- sits outside .track: its overflow:hidden would clip the notch -->
+              <div class="marker" id="marker" style="left:0%"></div>
               <div class="scale" id="scale"></div>
             </div>
 
@@ -1287,8 +1305,8 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
 
     el.scale.innerHTML =
       '<span class="edge-l">0 M</span>' +
-      '<span style="left:' + pct(MORTAR.max) + '%">' + MORTAR.max + '</span>' +
-      '<span style="left:' + pct(ARTY.min) + '%">' + ARTY.min + '</span>' +
+      '<span class="pair-l" style="left:' + pct(MORTAR.max) + '%">' + MORTAR.max + '</span>' +
+      '<span class="pair-r" style="left:' + pct(ARTY.min) + '%">' + ARTY.min + '</span>' +
       '<span class="edge-r">' + ARTY.max + ' M</span>';
   }
 
@@ -1430,14 +1448,18 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
       }));
     }
 
-    [["N", 0], ["E", 90], ["S", 180], ["W", 270]].forEach(([lab, a]) => {
+    // All eight labels share one ring. The intercardinals are smaller and
+    // dimmer so they name the diagonal spokes without crowding N/E/S/W.
+    [["N", 0], ["NE", 45], ["E", 90], ["SE", 135],
+     ["S", 180], ["SW", 225], ["W", 270], ["NW", 315]].forEach(([lab, a]) => {
       const rad = a * Math.PI / 180, lr = R - 20;
+      const ordinal = lab.length === 2;
       const t = mk("text", {
-        class: lab === "N" ? "cardinal north" : "cardinal",
-        x: cx + lr * Math.sin(rad), y: cy - lr * Math.cos(rad) + 4,
+        class: lab === "N" ? "cardinal north" : (ordinal ? "cardinal ordinal" : "cardinal"),
+        x: cx + lr * Math.sin(rad), y: cy - lr * Math.cos(rad) + (ordinal ? 3 : 4),
         "text-anchor": "middle",
         "font-family": "'Saira Condensed', sans-serif",
-        "font-size": 13, "font-weight": 600, "letter-spacing": "0.08em"
+        "font-size": ordinal ? 9.5 : 13, "font-weight": 600, "letter-spacing": "0.08em"
       });
       t.textContent = lab;
       svg.appendChild(t);
