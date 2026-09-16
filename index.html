@@ -370,8 +370,19 @@ header {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-.field-suffix { left: auto; right: 12px; }
-.field:has(.field-suffix) input[type="text"] { padding-right: 4ch; }
+/* The unit trails the value instead of pinning to the field's right edge, so a
+   stretched input cannot strand it. CSS cannot see an input's rendered text
+   width, so placeUnit() measures it and sets --suffix-x. Until it does, or while
+   the field is empty, the unit stays hidden rather than floating over a
+   placeholder. No right gutter is reserved any more: the unit follows the value,
+   so the two can no longer collide. */
+.field-suffix {
+  left: var(--suffix-x, 12px);
+  right: auto;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.field.has-unit .field-suffix { opacity: 1; }
 
 input[type="text"] {
   width: 100%;
@@ -817,12 +828,20 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
 /* responsive ------------------------------------------------------ */
 /* Rows and the solution respond to their own panel's width, so they adapt
    the same way whether the panels are stacked or side by side. */
-@container panel (max-width: 580px) {
+/* Four fields abreast need ~732px of panel before the values stop being clipped:
+   each one spends 36.6px on the prefix gutter (4ch) and the suffixed ones another
+   36.6px on the right, so a 96px column leaves barely 20px of readable content.
+   Wrap to two-by-two well before that, which also covers the 680px single-column
+   panel (--shell) that medium screens land on. */
+@container panel (max-width: 760px) {
   /* trailing auto column keeps the button inline with x and y, as in .row */
   .row.spotter-detail { grid-template-columns: 112px 1fr 1fr auto; }
   .row.spotter-detail .row-label { grid-row: span 2; }
   /* pinned to row 1 so brg and rng wrap underneath x and y, not around the button */
   .row.spotter-detail .paste-btn { grid-column: 4; grid-row: 1; }
+  /* row 2 has no button, so rng (the last field) widens into that empty cell.
+     Scoped to this block so it covers every width that wraps into two rows */
+  .row.spotter-detail .field:last-of-type { grid-column: 3 / -1; }
 }
 @container panel (max-width: 500px) {
   .solution { grid-template-columns: 1fr; gap: 18px; }
@@ -837,6 +856,8 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
   /* stacked layout: full width like every other row's button. grid-row is reset
      so the wider breakpoint above does not leave it pinned to row 1. */
   .row.spotter-detail .paste-btn { grid-column: 1 / -1; grid-row: auto; justify-self: stretch; }
+  /* reset the 3 / -1 span above: this layout only has two columns */
+  .row.spotter-detail .field:last-of-type { grid-column: auto; }
   .shots { grid-template-columns: minmax(0, 1fr); }
 }
 
@@ -1332,6 +1353,41 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
     el.spBrgDir.textContent = brg !== null && brg >= 0 && brg <= 360 ? compassAbbr(brg) : "";
   }
 
+  /* An input's rendered text width is invisible to CSS, so mirror the value in
+     a hidden span that borrows the same typography and measure that instead.
+     One span serves every field; it is only ever read synchronously. */
+  const unitMirror = document.createElement("span");
+  unitMirror.setAttribute("aria-hidden", "true");
+  unitMirror.style.cssText =
+    "position:absolute;left:-9999px;top:0;white-space:pre;pointer-events:none";
+  document.body.appendChild(unitMirror);
+
+  // Parks the unit just past the value, and hides it when there is nothing to label.
+  function placeUnit(input) {
+    const field = input.closest(".field");
+    const unit = field && field.querySelector(".field-suffix");
+    if (!unit) return;
+
+    const show = input.value.trim() !== "" && unit.textContent.trim() !== "";
+    field.classList.toggle("has-unit", show);
+    if (!show) return;
+
+    const cs = getComputedStyle(input);
+    unitMirror.style.fontFamily = cs.fontFamily;
+    unitMirror.style.fontSize = cs.fontSize;
+    unitMirror.style.fontWeight = cs.fontWeight;
+    unitMirror.style.fontStyle = cs.fontStyle;
+    unitMirror.style.letterSpacing = cs.letterSpacing;
+    unitMirror.style.fontVariantNumeric = cs.fontVariantNumeric;
+    unitMirror.textContent = input.value;
+
+    const border = parseFloat(cs.borderLeftWidth);
+    const x = border + parseFloat(cs.paddingLeft) + unitMirror.offsetWidth + 6;
+    // never let an unexpectedly long value push the unit out of the box
+    const limit = border + input.clientWidth - parseFloat(cs.paddingRight) - unit.offsetWidth;
+    field.style.setProperty("--suffix-x", Math.min(x, limit) + "px");
+  }
+
   function setSpotterEnabled(on) {
     [el.spX, el.spY, el.spBrg, el.spRng].forEach((i) => { i.disabled = !on; });
     el.rowSpotter.classList.toggle("is-off", !on);
@@ -1357,6 +1413,8 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
 
   function recalc() {
     updateBearingSuffix();
+    placeUnit(el.spBrg);
+    placeUnit(el.spRng);
 
     const you = { x: num(el.youX), y: num(el.youY) };
     const youOK = you.x !== null && you.y !== null;
@@ -1652,6 +1710,11 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
   layoutTrack();
   setSpotterEnabled(false);
   recalc();
+
+  // the webfonts change how wide a value renders, so measure again once they land
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => { placeUnit(el.spBrg); placeUnit(el.spRng); });
+  }
 })();
 </script>
 </body>
