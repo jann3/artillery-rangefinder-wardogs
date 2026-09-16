@@ -10,28 +10,43 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="canonical" href="https://janne.dev/rangefinder/">
+<!-- all three are ~1 KB; fetching them up front keeps the footer cross-fade instant -->
+<link rel="prefetch" href="images/background1-blur.webp" as="image" type="image/webp">
+<link rel="prefetch" href="images/background2-blur.webp" as="image" type="image/webp">
+<link rel="prefetch" href="images/background3-blur.webp" as="image" type="image/webp">
 <script>
 /* Picks the backdrop for this load. Runs before first paint, so the
    fallback in --bg-image below is only ever seen without JS. */
 (function () {
   "use strict";
   var n = 1 + Math.floor(Math.random() * 3);
-  document.documentElement.style.setProperty("--bg-image", "url('images/background" + n + ".webp')");
+  var root = document.documentElement;
+  root.style.setProperty("--bg-image", "url('images/background" + n + "-blur.webp')");
+  /* the footer cycle advances the backdrop from whichever one landed here */
+  root.dataset.bg = n;
 })();
 </script>
 <style>
 /* ============================================================
    BACKGROUND IMAGE
-   One of images/background1-3.webp is picked per load by the
+   One of images/background1-3-blur.webp is picked per load by the
    script in <head>; the line below is the no-JS fallback.
+   Those files ship pre-blurred, so no runtime blur() is needed; the
+   sharp originals are kept alongside them as the source to re-export from.
    Delete the line to fall back to the gradient.
    ============================================================ */
 :root {
-  --bg-image: url('images/background1.webp');
+  --bg-image: url('images/background1-blur.webp');
   --bg-brightness: 0.65;       /* 1 = image at full brightness */
   --bg-overlay-top: 38.5%;     /* dark overlay strength, top of screen */
   --bg-overlay-bottom: 57.4%;  /* dark overlay strength, bottom of screen */
   --bg-fade: 2s;               /* how long the backdrop takes to fade in */
+  --bg-swap: 1.1s;             /* cross-fade when the footer cycles the backdrop */
+  /* shared by both backdrop layers, so the tint is defined in one place */
+  --bg-gradients:
+    radial-gradient(closest-side at 22% 18%, color-mix(in srgb, var(--yellow) 22%, transparent), transparent 70%),
+    radial-gradient(closest-side at 82% 72%, color-mix(in srgb, color-mix(in srgb, var(--yellow-dim) 85%, black) 30%, transparent), transparent 72%),
+    radial-gradient(closest-side at 55% 105%, color-mix(in srgb, var(--line) 55%, transparent), transparent 70%);
 }
 
 /* ============================================================
@@ -108,31 +123,49 @@ body {
   align-items: center;  /* centres vertically; taller pages just scroll from the top */
 }
 
+/* Two identical backdrop layers. body::before carries the image in play and
+   html::before carries the incoming one, fading in over the top, so cycling the
+   footer cross-fades instead of dipping through the flat page colour. When the
+   fade ends the base layer adopts the new image and the top layer is cleared
+   behind an identical picture, which makes the reset invisible.
+   Both sit on negative z-indexes: body's own background propagates to the canvas,
+   so nothing paints over them. */
+html::before,
 body::before {
   content: "";
   position: fixed;
   inset: -60px;
-  z-index: -2;
   background-color: var(--brown-950);
-  background-image:
-    radial-gradient(closest-side at 22% 18%, color-mix(in srgb, var(--yellow) 22%, transparent), transparent 70%),
-    radial-gradient(closest-side at 82% 72%, color-mix(in srgb, color-mix(in srgb, var(--yellow-dim) 85%, black) 30%, transparent), transparent 72%),
-    radial-gradient(closest-side at 55% 105%, color-mix(in srgb, var(--line) 55%, transparent), transparent 70%),
-    var(--bg-image, none);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: blur(34px) saturate(0.7) brightness(var(--bg-brightness));
+  /* No blur() here: the backdrops ship pre-blurred, which drops a full-viewport
+     convolution on load and on every resize, and takes the three images from
+     168 KB to 3.8 KB. saturate and brightness are cheap per-pixel ops and stay,
+     so --bg-brightness above remains tunable. */
+  filter: saturate(0.7) brightness(var(--bg-brightness));
   transform: scale(1.06);
+}
+body::before {
+  z-index: -3;
+  background-image: var(--bg-gradients), var(--bg-image, none);
   /* resolve out of the flat page colour rather than snapping in */
   animation: bg-fade-in var(--bg-fade) ease-in-out forwards;
 }
+html::before {
+  z-index: -2;
+  background-image: var(--bg-gradients), var(--bg-next, none);
+  opacity: 0;
+  transition: opacity var(--bg-swap) ease-in-out;
+}
+html.bg-swap::before { opacity: 1; }
 @keyframes bg-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   body::before { animation-duration: 0s; }
+  html::before { transition-duration: 0s; }
 }
 body::after {
   content: "";
@@ -183,14 +216,16 @@ header {
     color-mix(in srgb, var(--brown-850) 94%, transparent));
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  /* No backdrop-filter here on purpose. What sits behind these panels is
+     body::before, already blurred to 34px, so blurring it again by 14px was
+     imperceptible (measured: 0% of pixels differed by more than 2/255) while
+     costing three per-frame backdrop samples and three extra composited layers. */
   box-shadow: 0 18px 44px color-mix(in srgb, var(--shadow) 45%, transparent);
 }
 .panel + .panel,
 .duo + .panel { margin-top: 16px; }
-/* backdrop-filter makes each panel its own stacking context, so lift the
-   whole panel while one of its popovers is open or later panels paint over it */
+/* panels are positioned, so a later one paints over an earlier one's popover;
+   lift the whole panel while one of its popovers is open */
 .panel:has(.popover[data-open="true"]) { z-index: 50; }
 
 /* two-up layout --------------------------------------------------- */
@@ -542,6 +577,9 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   display: none;
   translate: var(--nudge, 0px) 0;   /* set by script to keep it on screen */
 }
+.popover p {
+    margin-top: 0;
+}
 .popover[data-open="true"] { display: block; animation: pop 130ms ease-out; }
 .popover::before {
   content: "";
@@ -824,6 +862,30 @@ details[open] > summary .chev { transform: rotate(45deg); }
 
 footer { margin-top: 22px; text-align: center; font-size: 12px; color: color-mix(in srgb, var(--faint) 85%, var(--brown-900)); }
 footer:empty { display: none; }   /* no gap under the page until footer text is added */
+/* The line is a button while it cycles and a link once it settles on ko-fi.
+   Both are styled to read as the plain footer text they stand in for. */
+.footer-msg {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  /* Both the button and the link need this. An inline <a> ignores vertical
+     padding in the line box, so without it the footer loses 4px the moment it
+     settles on the link, and a centred page nudges with it. */
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 240ms ease;
+}
+/* no hover colour: the pointer cursor already says it is clickable */
+.footer-msg:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
+/* mid-swap the old line is faded out, the text replaced, then faded back in */
+footer.is-fading .footer-msg { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .footer-msg { transition-duration: 0s; }
+}
 
 /* responsive ------------------------------------------------------ */
 /* Rows and the solution respond to their own panel's width, so they adapt
@@ -893,9 +955,10 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
         <span class="help-wrap">
           <button type="button" class="help" data-pop="popPaste" aria-expanded="false" aria-label="What formats can be pasted">?</button>
           <div class="popover" id="popPaste" role="tooltip">
-            Paste any text with two numbers, like <code>x98.43, y110.38</code>,
-            <code>98.43 110.38</code> or <code>(98.43, 110.38)</code>.
-            Paste four numbers into <strong>You</strong> to fill both rows at once.
+            <p>Paste grid co-ordinates for <strong>You</strong> (the firing position), and your <strong>Target</strong>.</p>
+            These can be two numbers, like <code>x98.43, y110.38</code>,
+            <code>98.43 110.38</code>.
+            Pasting four numbers into <strong>You</strong> will fill both rows at once.
           </div>
         </span>
       </div>
@@ -963,9 +1026,8 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
           <span class="help-wrap">
             <button type="button" class="help" data-pop="popSpotter" aria-expanded="false" aria-label="About spotter mode">?</button>
             <div class="popover align-right" id="popSpotter" role="tooltip">
-              The spotter's bearing and range are turned into target co-ordinates, then the
-              solution is worked out from your position as usual. It still works when you,
-              the spotter and the target are in a line.
+              The spotter's bearing and range to target are turned into target co-ordinates, then the
+              solution is worked out from your position as usual.
             </div>
           </span>
         </div>
@@ -1131,7 +1193,8 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
     </details>
   </section>
 
-  <footer></footer>
+  <!-- plain text is the no-JS fallback; the script upgrades it to the cycling line -->
+  <footer id="footer">Other rangefinding tools are available.</footer>
 </div>
 
 <script>
@@ -1715,6 +1778,93 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => { placeUnit(el.spBrg); placeUnit(el.spRng); });
   }
+
+  /* ---------- footer ---------- */
+
+  /* Three throwaway lines that cycle on click, starting from a random one. Every
+     click also advances the backdrop, and once those have been round twice the
+     footer settles on the ko-fi link and stays there — so the 7th click is the
+     one that brings up the link. */
+  const FOOTER_LINES = [
+    "Other rangefinding tools are available.",
+    "Please mortar responsibly.",
+    "Have mercy."
+  ];
+  const FOOTER_LAST = { text: "Buy me a coffee (or beer) here.", href: "https://ko-fi.com/jann3" };
+  const BG_COUNT = 3;
+  const BG_LAPS = 2;                        // go round the backdrops twice...
+  const LINE_CLICKS = BG_COUNT * BG_LAPS;   // ...so click 7 is the one that links
+  const FOOTER_FADE = 240;   // must match the .footer-msg opacity transition
+
+  const footerEl = $("footer");
+  const root = document.documentElement;
+  let lineIdx = Math.floor(Math.random() * FOOTER_LINES.length);
+  let clicks = 0;
+  let bgIdx = Number(root.dataset.bg) || 1;
+
+  const bgUrl = (n) => "url('images/background" + n + "-blur.webp')";
+
+  // CSS owns the duration; read it back so the two never drift apart.
+  function swapMs() {
+    const v = getComputedStyle(root).getPropertyValue("--bg-swap").trim();
+    const n = parseFloat(v);
+    if (!n) return 0;
+    return /ms$/.test(v) ? n : n * 1000;
+  }
+
+  /* Ride the incoming image in on html::before, then hand it to the base layer
+     and clear the top one behind what is now an identical picture. */
+  function advanceBackdrop() {
+    bgIdx = (bgIdx % BG_COUNT) + 1;
+    root.style.setProperty("--bg-next", bgUrl(bgIdx));
+    root.classList.add("bg-swap");
+    window.setTimeout(() => {
+      root.style.setProperty("--bg-image", bgUrl(bgIdx));
+      root.classList.remove("bg-swap");
+    }, swapMs());
+  }
+
+  function lineButton(text) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "footer-msg";
+    b.textContent = text;
+    b.addEventListener("click", cycleFooter);
+    return b;
+  }
+
+  function beerLink() {
+    const a = document.createElement("a");
+    a.className = "footer-msg";
+    a.href = FOOTER_LAST.href;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = FOOTER_LAST.text;
+    return a;
+  }
+
+  function swapFooter(node, keepFocus) {
+    footerEl.classList.add("is-fading");
+    window.setTimeout(() => {
+      footerEl.replaceChildren(node);
+      footerEl.classList.remove("is-fading");
+      if (keepFocus) node.focus();   // keyboard users stay on the line they were on
+    }, FOOTER_FADE);
+  }
+
+  function cycleFooter(ev) {
+    const keepFocus = document.activeElement === ev.currentTarget;
+    advanceBackdrop();
+    clicks += 1;
+    if (clicks <= LINE_CLICKS) {
+      lineIdx = (lineIdx + 1) % FOOTER_LINES.length;
+      swapFooter(lineButton(FOOTER_LINES[lineIdx]), keepFocus);
+    } else {
+      swapFooter(beerLink(), keepFocus);
+    }
+  }
+
+  footerEl.replaceChildren(lineButton(FOOTER_LINES[lineIdx]));
 })();
 </script>
 </body>
