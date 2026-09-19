@@ -9,11 +9,32 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="canonical" href="https://janne.dev/rangefinder/">
-<!-- all three are ~1 KB; fetching them up front keeps the footer cross-fade instant -->
+<!-- all three are ~1 KB; fetching them up front keeps the backdrop cross-fade smooth -->
 <link rel="prefetch" href="images/background1-blur.webp" as="image" type="image/webp">
 <link rel="prefetch" href="images/background2-blur.webp" as="image" type="image/webp">
 <link rel="prefetch" href="images/background3-blur.webp" as="image" type="image/webp">
+<link rel="canonical" href="https://janne.dev/rangefinder/">
+<meta name="title" content="Wardogs Artillery Rangefinder">
+	<meta name="description"
+		content="A tool for ranging mortar and artillery between two targets in the videogame 'Wardogs', also with spotter rangefinding.">
+	<meta name="keywords"
+		content="wardogs, mortar, artillery, range, rangefinder, rangefinding, calculator, spotter">
+	<meta property="og:type" content="website">
+	<meta property="og:image:url" content="https://janne.dev/rangefinder/images/wardogs-artillery-rangefinder">
+	<meta property="og:image:type" content="images/webp">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+	<meta property="og:image:alt"
+		content="Screenshot of a user interface showing a co-ordinate positions for you and target and a compass bearing with a measurement in meters.">
+	<meta property="og:title" content="Wardogs Artillery Rangefinder">
+	<meta property="og:url" content="https://janne.dev/rangefinder/">
+	<meta property="og:description"
+		content="A tool for ranging mortar and artillery targets in the videogame 'Wardogs'.">
+	<meta property="og:locale" content="en_US">
+	<meta property="og:locale:alternate" content="en_GB">
+	<meta name="robots" content="index, follow">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="language" content="English">
 <script>
 /* Picks the backdrop for this load. Runs before first paint, so the
    fallback in --bg-image below is only ever seen without JS. */
@@ -877,15 +898,9 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
   border-radius: 6px;
   cursor: pointer;
   text-decoration: none;
-  transition: opacity 240ms ease;
 }
 /* no hover colour: the pointer cursor already says it is clickable */
 .footer-msg:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
-/* mid-swap the old line is faded out, the text replaced, then faded back in */
-footer.is-fading .footer-msg { opacity: 0; }
-@media (prefers-reduced-motion: reduce) {
-  .footer-msg { transition-duration: 0s; }
-}
 
 /* responsive ------------------------------------------------------ */
 /* Rows and the solution respond to their own panel's width, so they adapt
@@ -1722,8 +1737,14 @@ footer.is-fading .footer-msg { opacity: 0; }
   el.copyBtn.addEventListener("click", async () => {
     if (!lastSolution) return;
     const { s } = lastSolution;
-    const text = "Bearing " + bearingText(s.bearing) + " " + compassAbbr(s.bearing) +
-                 " — Range (RNG) " + Math.round(s.metres) + " M";
+    /* Name the gun the target is in range for; a target in the dead band or
+       beyond either gun gets the bearing and range on their own. */
+    const m = s.metres;
+    let prefix = "";
+    if (m >= MORTAR.min && m <= MORTAR.max) prefix = "Mortar ";
+    else if (m >= ARTY.min && m <= ARTY.max) prefix = "Artillery ";
+    const text = prefix + "Bearing " + bearingText(s.bearing) + " " + compassAbbr(s.bearing) +
+                 ", Range (RNG) " + Math.round(m) + " M";
     try {
       await navigator.clipboard.writeText(text);
       say("Copied: " + text);
@@ -1786,15 +1807,14 @@ footer.is-fading .footer-msg { opacity: 0; }
      footer settles on the ko-fi link and stays there — so the 7th click is the
      one that brings up the link. */
   const FOOTER_LINES = [
-    "Other rangefinding tools are available.",
-    "Please mortar responsibly.",
-    "Have mercy."
+    "Other rangefinding tools are available",
+    "Please mortar responsibly",
+    "Have mercy"
   ];
   const FOOTER_LAST = { text: "Buy me a coffee (or beer) here.", href: "https://ko-fi.com/jann3" };
   const BG_COUNT = 3;
   const BG_LAPS = 2;                        // go round the backdrops twice...
   const LINE_CLICKS = BG_COUNT * BG_LAPS;   // ...so click 7 is the one that links
-  const FOOTER_FADE = 240;   // must match the .footer-msg opacity transition
 
   const footerEl = $("footer");
   const root = document.documentElement;
@@ -1843,13 +1863,10 @@ footer.is-fading .footer-msg { opacity: 0; }
     return a;
   }
 
+  /* The line swaps instantly — only the backdrop behind it cross-fades. */
   function swapFooter(node, keepFocus) {
-    footerEl.classList.add("is-fading");
-    window.setTimeout(() => {
-      footerEl.replaceChildren(node);
-      footerEl.classList.remove("is-fading");
-      if (keepFocus) node.focus();   // keyboard users stay on the line they were on
-    }, FOOTER_FADE);
+    footerEl.replaceChildren(node);
+    if (keepFocus) node.focus();   // keyboard users stay on the line they were on
   }
 
   function cycleFooter(ev) {
