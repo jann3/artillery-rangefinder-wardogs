@@ -1,0 +1,965 @@
+/* ============================================================
+   FONTS
+   Self-hosted from fonts/, latin subset only — nothing on the page sits
+   outside it. Inter ships as a variable font, so one file covers the 400
+   and 600 the design uses; Saira Condensed is static, so 600 and 700 are
+   separate files. No other weights are referenced anywhere in this file.
+   ============================================================ */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('../fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Saira Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/saira-condensed-600-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Saira Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/saira-condensed-700-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ============================================================
+   BACKGROUND IMAGE
+   One of images/background1-3-blur.webp is picked per load by the
+   script in <head>; the line below is the no-JS fallback. Paths in this
+   file resolve against css/, not the page's <base>, hence the ../.
+   Those files ship pre-blurred, so no runtime blur() is needed; the
+   sharp originals are kept alongside them as the source to re-export from.
+   Delete the line to fall back to the gradient.
+   ============================================================ */
+:root {
+  --bg-image: url('../images/background1-blur.webp');
+  --bg-brightness: 0.65;       /* 1 = image at full brightness */
+  --bg-overlay-top: 38.5%;     /* dark overlay strength, top of screen */
+  --bg-overlay-bottom: 57.4%;  /* dark overlay strength, bottom of screen */
+  --bg-fade: 2s;               /* how long the backdrop takes to fade in */
+  --bg-swap: 1.1s;             /* cross-fade when the footer cycles the backdrop */
+  /* shared by both backdrop layers, so the tint is defined in one place */
+  --bg-gradients:
+    radial-gradient(closest-side at 22% 18%, color-mix(in srgb, var(--yellow) 22%, transparent), transparent 70%),
+    radial-gradient(closest-side at 82% 72%, color-mix(in srgb, color-mix(in srgb, var(--yellow-dim) 85%, black) 30%, transparent), transparent 72%),
+    radial-gradient(closest-side at 55% 105%, color-mix(in srgb, var(--line) 55%, transparent), transparent 70%);
+}
+
+/* ============================================================
+   THEME
+   Tweak the base colours. Every tint, border, the compass dial
+   and the icons are mixed from them further down.
+   ============================================================ */
+:root {
+  /* browns, darkest to lightest */
+  --brown-900: #121210;   /* page background */
+  --brown-800: #1e1e19;   /* panels, active rows */
+  --brown-700: #2e2e26;   /* lightest tint, hovers */
+  --line:      #3a3a30;   /* borders */
+
+  /* text */
+  --white:  #ffffff;      /* strong text and key notes */
+  --text:   #e9e6dc;      /* off-white body text and headings */
+  --text-2: #b4b0a3;      /* secondary text */
+  --muted:  #86837a;      /* hints */
+  --faint:  #6b6860;      /* placeholders, scale labels */
+
+  /* accents */
+  --yellow:   #f5c518;
+  --red:      #e5533c;    /* out of range, errors */
+  --red-soft: #ff7a63;    /* red text on dark backgrounds */
+  --shadow:   #000000;
+
+  /* icons: base strokes and the highlighted part */
+  --icon-color:  var(--white);
+  --icon-accent: var(--yellow);
+
+  /* derived: mixed from the base colours above */
+  --brown-950:  color-mix(in srgb, var(--brown-900) 78%, black);
+  --brown-850:  color-mix(in srgb, var(--brown-900), var(--brown-800));
+  --brown-750:  color-mix(in srgb, var(--brown-800), var(--brown-700));
+  --popover-bg: color-mix(in srgb, var(--brown-800) 62%, var(--brown-700));
+  --line-hi:    color-mix(in srgb, var(--line) 91%, var(--text));
+  --line-soft:  color-mix(in srgb, var(--text) 8%, transparent);
+
+  --yellow-hi:   color-mix(in srgb, var(--yellow) 88%, var(--white));
+  --yellow-soft: color-mix(in srgb, var(--yellow) 88%, var(--brown-900));
+  --yellow-dim:  color-mix(in srgb, var(--yellow) 54%, var(--brown-900));
+  --yellow-wash: color-mix(in srgb, var(--yellow) 10%, transparent);
+  --yellow-edge: color-mix(in srgb, var(--yellow) 35%, transparent);
+  --on-yellow:   color-mix(in srgb, var(--yellow) 10%, black);
+
+  --red-wash: color-mix(in srgb, var(--red) 12%, transparent);
+  --red-edge: color-mix(in srgb, var(--red) 42%, transparent);
+
+  --r-xl: 18px;
+  --r-lg: 14px;
+  --r-md: 10px;
+
+  --shell: 680px;
+  --shell-wide: 1160px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;   /* ignores mobile browser toolbars so centring is true */
+  padding: 40px 20px;
+  background: var(--brown-900);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  display: flex;
+  justify-content: center;
+  align-items: center;  /* centres vertically; taller pages just scroll from the top */
+}
+
+/* Two identical backdrop layers. body::before carries the image in play and
+   html::before carries the incoming one, fading in over the top, so cycling the
+   footer cross-fades instead of dipping through the flat page colour. When the
+   fade ends the base layer adopts the new image and the top layer is cleared
+   behind an identical picture, which makes the reset invisible.
+   Both sit on negative z-indexes: body's own background propagates to the canvas,
+   so nothing paints over them. */
+html::before,
+body::before {
+  content: "";
+  position: fixed;
+  inset: -60px;
+  background-color: var(--brown-950);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* No blur() here: the backdrops ship pre-blurred, which drops a full-viewport
+     convolution on load and on every resize, and takes the three images from
+     168 KB to 3.8 KB. saturate and brightness are cheap per-pixel ops and stay,
+     so --bg-brightness above remains tunable. */
+  filter: saturate(0.7) brightness(var(--bg-brightness));
+  transform: scale(1.06);
+}
+body::before {
+  z-index: -3;
+  background-image: var(--bg-gradients), var(--bg-image, none);
+  /* resolve out of the flat page colour rather than snapping in */
+  animation: bg-fade-in var(--bg-fade) ease-in-out forwards;
+}
+html::before {
+  z-index: -2;
+  background-image: var(--bg-gradients), var(--bg-next, none);
+  opacity: 0;
+  transition: opacity var(--bg-swap) ease-in-out;
+}
+html.bg-swap::before { opacity: 1; }
+@keyframes bg-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation-duration: 0s; }
+  html::before { transition-duration: 0s; }
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--brown-950) var(--bg-overlay-top), transparent) 0%,
+    color-mix(in srgb, var(--brown-950) var(--bg-overlay-bottom), transparent) 100%);
+}
+
+.shell {
+  width: 100%;
+  max-width: var(--shell-wide);
+  container: shell / inline-size;
+}
+/* stacked layout keeps the narrow reading width until two panels fit side by side */
+.shell > * { max-width: var(--shell); margin-inline: auto; }
+
+h1, h2 {
+  font-family: 'Saira Condensed', 'Inter', sans-serif;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  margin: 0;
+}
+h1 { font-size: 30px; font-weight: 700; line-height: 1.1; }
+h1 .slashes { color: var(--yellow); margin-right: 8px; }
+h2 { font-size: 15px; font-weight: 600; color: var(--text-2); }
+strong { color: var(--white); font-weight: 600; }
+
+.strapline { color: var(--text-2); font-size: 13.5px; margin: 4px 0 22px; }
+.strapline code { color: var(--yellow-soft); }
+
+/* soft dark halo so the title and subtitle stay readable over the background image */
+header {
+  text-shadow:
+    0 0 6px color-mix(in srgb, var(--brown-900) 85%, transparent),
+    0 0 18px color-mix(in srgb, var(--brown-900) 65%, transparent);
+}
+
+/* panels ---------------------------------------------------------- */
+.panel {
+  position: relative;
+  container: panel / inline-size;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--brown-800) 92%, transparent),
+    color-mix(in srgb, var(--brown-850) 94%, transparent));
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  /* No backdrop-filter here on purpose. What sits behind these panels is
+     body::before, already blurred to 34px, so blurring it again by 14px was
+     imperceptible (measured: 0% of pixels differed by more than 2/255) while
+     costing three per-frame backdrop samples and three extra composited layers. */
+  box-shadow: 0 18px 44px color-mix(in srgb, var(--shadow) 45%, transparent);
+}
+.panel + .panel,
+.duo + .panel { margin-top: 16px; }
+/* panels are positioned, so a later one paints over an earlier one's popover;
+   lift the whole panel while one of its popovers is open */
+.panel:has(.popover[data-open="true"]) { z-index: 50; }
+
+/* two-up layout --------------------------------------------------- */
+@container shell (min-width: 1040px) {
+  .shell > * { max-width: none; }
+  .duo {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .duo > .panel + .panel { margin-top: 0; }
+  .duo > .panel { display: flex; flex-direction: column; }
+  .duo .panel-body { flex: 1; display: flex; flex-direction: column; }
+  .duo .empty { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.panel-body { padding: 18px; }
+
+/* how to use ------------------------------------------------------ */
+.howto { counter-reset: step; margin: 0; padding: 0; list-style: none; }
+.howto li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 30px;
+  margin-bottom: 7px;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.howto li:last-child { margin-bottom: 0; }
+.howto li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0; top: 1px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--yellow-wash);
+  border: 1px solid var(--yellow-edge);
+  color: var(--yellow);
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+.howto code { color: var(--yellow-soft); background: var(--brown-750); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+
+/* the two firing methods read as separate drills, so each gets its own heading and count */
+.howto-head {
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 9px;
+}
+.howto-mode { color: var(--yellow-soft); }
+/* both opt out of the 62ch measure .details-body p sets: the steps they sit with
+   are unconstrained, so keeping it makes these two wrap short of everything else */
+.details-body .howto-sub { margin: -6px 0 10px; color: var(--muted); font-size: 12.5px; max-width: none; }
+.howto-group + .howto-group {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+/* the paste shorthand applies to both drills, so it sits under them rather than inside one */
+.details-body .howto-note {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--muted);
+  max-width: none;
+}
+
+.howto-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 1px;
+  font-size: inherit;
+  font-weight: 600;
+  line-height: inherit;
+  color: var(--yellow);
+  border-bottom: 1px dashed var(--yellow-edge);
+  transition: color 130ms ease, border-color 130ms ease;
+}
+.howto-link:hover { color: var(--yellow-hi); border-bottom-color: var(--yellow); }
+.howto-link:focus-visible { outline: none; border-radius: 3px; box-shadow: 0 0 0 3px var(--yellow-wash); }
+.howto-link .chev-sm {
+  width: 6px; height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 160ms ease;
+}
+.howto-link[aria-expanded="true"] .chev-sm { transform: translateY(1px) rotate(-135deg); }
+
+.shots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0 6px;
+  animation: reveal 170ms ease-out;
+}
+.shot { margin: 0; }
+.shot-frame {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  border: 1px dashed var(--line);
+  background: var(--brown-850);
+}
+.shot-frame:has(img:not([hidden])) { border-style: solid; }
+.shot-frame::before {
+  content: attr(data-label);
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.shot-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.shot figcaption { margin-top: 7px; font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+.shot kbd {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  background: var(--brown-750);
+  color: var(--text);
+}
+
+/* position rows --------------------------------------------------- */
+.row {
+  display: grid;
+  grid-template-columns: 112px 1fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 13px 16px;
+  border-radius: var(--r-lg);
+  background: var(--brown-850);
+  border: 1px solid transparent;
+  border-left: 3px solid var(--line);
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.row + .row { margin-top: 10px; }
+.row.is-active { border-left-color: var(--yellow); background: var(--brown-800); }
+.row.is-filled { border-left-color: var(--yellow-dim); }
+.row.is-derived { border-left-color: var(--yellow-soft); background: color-mix(in srgb, var(--yellow) 4.5%, transparent); }
+/* spotter on: mute the target title so the two inputs read as either/or */
+.row.is-derived .row-label { color: var(--muted); --icon-color: var(--muted); --icon-accent: var(--muted); }
+.row.is-off { opacity: 0.42; }
+/* trailing auto column matches .row, so the paste button sits beside the fields */
+.row.spotter-detail { grid-template-columns: 112px repeat(4, 1fr) auto; }
+
+.row-label {
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* icons ----------------------------------------------------------- */
+/* Inline SVGs from /icons: strokes use currentColor, the .accent part uses
+   --icon-accent. Set --icon-color or --icon-accent on any ancestor to recolour.
+   :where() keeps these rules at zero specificity so they are easy to override. */
+.icon {
+  width: 18px; height: 18px;
+  flex: none;
+  color: var(--icon-color);
+}
+:where(.icon .accent[stroke]:not([stroke="none"])) { stroke: var(--icon-accent); }
+:where(.icon .accent[fill]:not([fill="none"])) { fill: var(--icon-accent); }
+
+/* inputs ---------------------------------------------------------- */
+.field { position: relative; display: flex; align-items: center; }
+.field-prefix,
+.field-suffix {
+  position: absolute;
+  left: 12px;
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--yellow-dim);
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+/* The unit trails the value instead of pinning to the field's right edge, so a
+   stretched input cannot strand it. CSS cannot see an input's rendered text
+   width, so placeUnit() measures it and sets --suffix-x. Until it does, or while
+   the field is empty, the unit stays hidden rather than floating over a
+   placeholder. No right gutter is reserved any more: the unit follows the value,
+   so the two can no longer collide. */
+.field-suffix {
+  left: var(--suffix-x, 12px);
+  right: auto;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.field.has-unit .field-suffix { opacity: 1; }
+
+input[type="text"] {
+  width: 100%;
+  padding: 9px 12px 9px 4ch;
+  background: var(--brown-750);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+input[type="text"]::placeholder { color: var(--faint); }
+input[type="text"]:hover:not(:disabled):not([readonly]) { border-color: var(--line-hi); }
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-wash);
+}
+input[type="text"]:disabled { cursor: not-allowed; background: var(--brown-800); }
+input[type="text"][readonly] {
+  background: color-mix(in srgb, var(--yellow) 6%, transparent);
+  border-color: var(--yellow-edge);
+  color: var(--yellow);
+  cursor: default;
+}
+input.is-bad { border-color: var(--red); }
+input.is-bad:focus { box-shadow: 0 0 0 3px var(--red-wash); }
+
+/* checkbox -------------------------------------------------------- */
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.check input { position: absolute; opacity: 0; width: 0; height: 0; }
+.check .box {
+  width: 18px; height: 18px;
+  flex: none;
+  border: 1.5px solid var(--line);
+  border-radius: 5px;
+  background: var(--brown-750);
+  display: grid;
+  place-items: center;
+  transition: all 130ms ease;
+}
+.check .box::after {
+  content: "";
+  width: 9px; height: 5px;
+  border-left: 2px solid var(--brown-900);
+  border-bottom: 2px solid var(--brown-900);
+  transform: rotate(-45deg) scale(0.4);
+  opacity: 0;
+  transition: all 130ms ease;
+}
+.check input:checked + .box { background: var(--yellow); border-color: var(--yellow); }
+.check input:checked + .box::after { opacity: 1; transform: rotate(-45deg) scale(1); }
+.check input:focus-visible + .box { box-shadow: 0 0 0 3px var(--yellow-wash); }
+
+.spotter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 10px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line-soft);
+}
+
+/* buttons --------------------------------------------------------- */
+button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; background: none; color: inherit; }
+
+.btn {
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  background: var(--brown-750);
+  color: var(--text-2);
+  transition: all 130ms ease;
+}
+.btn:hover:not(:disabled) { background: var(--brown-700); color: var(--text); border-color: var(--line-hi); }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
+.btn-primary { background: var(--yellow); border-color: var(--yellow); color: var(--on-yellow); }
+.btn-primary:hover:not(:disabled) { background: var(--yellow-hi); border-color: var(--yellow-hi); color: var(--on-yellow); }
+.btn-sm { padding: 6px 14px; font-size: 12.5px; }
+.btn:disabled { cursor: not-allowed; opacity: 0.4; }
+
+.paste-btn {
+  padding: 7px 11px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--brown-750);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: all 130ms ease;
+  white-space: nowrap;
+}
+.paste-btn:hover:not(:disabled) { color: var(--yellow); border-color: var(--yellow-edge); }
+.paste-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
+.paste-btn:disabled { cursor: not-allowed; opacity: 0.4; }
+
+/* help + popovers ------------------------------------------------- */
+.help-wrap { position: relative; display: inline-flex; }
+.help {
+  width: 17px; height: 17px;
+  /* Chrome's UA stylesheet gives buttons padding-inline: 6px, leaving only a 3px
+     content box inside this 17px circle. The ~6px glyph cannot centre in 3px, so
+     Chrome pins it to the start edge and it spills right; Firefox overflows it
+     evenly and looks centred. Zeroing the padding centres it the same in both. */
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--brown-750);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  transition: all 130ms ease;
+}
+.help:hover, .help[aria-expanded="true"] {
+  color: var(--yellow);
+  border-color: var(--yellow-edge);
+  background: var(--yellow-wash);
+}
+.help:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
+
+.popover {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 9px);
+  left: -8px;
+  width: 272px;
+  padding: 13px 15px;
+  background: var(--popover-bg);
+  border: 1px solid var(--yellow-edge);
+  border-radius: var(--r-lg);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--shadow) 60%, transparent);
+  /* reset type inherited from where the popover sits, e.g. the uppercase row labels */
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-2);
+  display: none;
+  translate: var(--nudge, 0px) 0;   /* set by script to keep it on screen */
+}
+.popover p {
+    margin-top: 0;
+}
+.popover[data-open="true"] { display: block; animation: pop 130ms ease-out; }
+.popover::before {
+  content: "";
+  position: absolute;
+  top: -6px; left: 12px;
+  width: 10px; height: 10px;
+  background: var(--popover-bg);
+  border-left: 1px solid var(--yellow-edge);
+  border-top: 1px solid var(--yellow-edge);
+  transform: rotate(45deg);
+  translate: calc(var(--nudge, 0px) * -1) 0;   /* arrow stays over its button */
+}
+.popover.align-right { left: auto; right: -8px; }
+.popover.align-right::before { left: auto; right: 12px; }
+.popover code {
+  background: color-mix(in srgb, var(--yellow) 12%, transparent);
+  color: var(--yellow);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+@keyframes pop {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* solution -------------------------------------------------------- */
+.solution { display: grid; grid-template-columns: 232px 1fr; gap: 22px; align-items: center; }
+.dial-wrap { display: grid; place-items: center; }
+
+/* compass dial: shapes are drawn by script, colours come from the theme */
+#dial              { --hot: var(--yellow); }
+#dial.is-out       { --hot: var(--red); }
+#dial .face        { fill: color-mix(in srgb, var(--yellow) 3%, transparent); stroke: var(--line); }
+#dial .ring        { fill: none; stroke: color-mix(in srgb, var(--text) 7%, transparent); }
+#dial .tick        { stroke: var(--line); }
+#dial .tick.major  { stroke: color-mix(in srgb, var(--line) 82%, var(--text)); }
+#dial .cardinal    { fill: var(--faint); }
+#dial .cardinal.north { fill: var(--yellow); }
+#dial .cardinal.ordinal { fill: color-mix(in srgb, var(--faint) 72%, transparent); }
+#dial .spot-link   { stroke: color-mix(in srgb, var(--text) 22%, transparent); }
+#dial .spot-ray    { stroke: color-mix(in srgb, var(--text) 14%, transparent); }
+#dial .spot-dot    { fill: var(--brown-800); stroke: var(--text-2); }
+#dial .spot-label  { fill: var(--text-2); }
+#dial .arc         { fill: none; stroke: color-mix(in srgb, var(--hot) 50%, transparent); }
+#dial .north-line  { stroke: color-mix(in srgb, var(--yellow) 28%, transparent); }
+#dial .heading     { stroke: var(--hot); }
+#dial .target-halo { fill: color-mix(in srgb, var(--hot) 17%, transparent); }
+#dial .target-dot  { fill: var(--hot); }
+#dial .you-dot     { fill: var(--brown-800); stroke: var(--text); }
+#dial .you-pip     { fill: var(--text); }
+.readouts { display: flex; flex-direction: column; gap: 12px; }
+
+.readout {
+  padding: 14px 18px;
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--yellow) 13%, transparent),
+    color-mix(in srgb, var(--yellow) 5%, transparent));
+  border: 1px solid var(--yellow-edge);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.readout-label {
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--yellow-soft);
+  transition: color 160ms ease;
+}
+.readout-value {
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  color: var(--yellow);
+  margin-top: 2px;
+  transition: color 160ms ease;
+}
+.readout-sub { font-size: 12px; color: var(--muted); margin-top: 3px; font-variant-numeric: tabular-nums; }
+
+.readout.is-out {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--red) 15%, transparent),
+    color-mix(in srgb, var(--red) 5%, transparent));
+  border-color: var(--red-edge);
+}
+.readout.is-out .readout-label { color: var(--red-soft); }
+.readout.is-out .readout-value { color: var(--red-soft); }
+
+/* weapon envelopes ------------------------------------------------ */
+.envelopes { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--brown-850);
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: all 160ms ease;
+}
+.chip.is-live {
+  background: var(--yellow-wash);
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+/* padding-top clears the marker notch, which sits above the track */
+.track-wrap { position: relative; padding-top: 12px; }
+.track {
+  position: relative;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--brown-850);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.band {
+  position: absolute;
+  top: 0; bottom: 0;
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.band.is-live {
+  background: color-mix(in srgb, var(--yellow) 24%, transparent);
+  border-left-color: var(--yellow);
+  border-right-color: var(--yellow);
+}
+.band-tag {
+  position: absolute;
+  left: 7px; top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--muted), var(--faint));
+  white-space: nowrap;
+  transition: color 160ms ease;
+}
+.band.is-live .band-tag { color: var(--yellow); }
+
+.marker {
+  position: absolute;
+  top: 12px;      /* top of the track */
+  height: 26px;   /* matches .track, so the line spans the band exactly */
+  width: 2px;
+  background: var(--yellow);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--yellow) 70%, transparent);
+  transition: left 220ms cubic-bezier(.2,.8,.3,1), background 160ms ease;
+  z-index: 3;
+}
+/* the notch, pointing down at the exact range within the band */
+.marker::after {
+  content: "";
+  position: absolute;
+  top: -8px; left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--yellow);
+  transition: border-top-color 160ms ease;
+}
+.marker.is-out { background: var(--red); box-shadow: 0 0 9px color-mix(in srgb, var(--red) 70%, transparent); }
+.marker.is-out::after { border-top-color: var(--red); }
+
+.scale {
+  position: relative;
+  height: 15px;
+  margin-top: 5px;
+  font-size: 10.5px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.scale span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.scale span.edge-l { transform: none; left: 0; }
+.scale span.edge-r { transform: none; right: 0; }
+/* 685 and 745 are only ~2% apart and would collide when centred on their
+   ticks, so face them outward from the dead zone between the two bands */
+.scale span.pair-l { transform: translateX(calc(-100% - 3px)); }
+.scale span.pair-r { transform: translateX(3px); }
+
+.verdict {
+  margin-top: 13px;
+  padding: 11px 14px;
+  border-radius: var(--r-md);
+  font-size: 13.5px;
+  line-height: 1.5;
+  background: var(--yellow-wash);
+  border: 1px solid var(--yellow-edge);
+  color: var(--yellow-soft);
+}
+.verdict.is-out {
+  background: var(--red-wash);
+  border-color: var(--red-edge);
+  color: var(--red-soft);
+}
+/* empty ----------------------------------------------------------- */
+.empty { padding: 34px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+
+.actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.status { margin-top: 12px; font-size: 13px; color: var(--yellow-soft); min-height: 19px; }
+.status.err { color: var(--red-soft); }
+
+/* collapsibles ---------------------------------------------------- */
+details { border-top: 1px solid var(--line-soft); }
+details:first-of-type { border-top: none; }
+
+summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Saira Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  transition: color 130ms ease;
+}
+summary::-webkit-details-marker { display: none; }
+summary:hover { color: var(--text); }
+summary:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--yellow-edge); }
+summary .chev {
+  width: 9px; height: 9px;
+  border-right: 2px solid var(--yellow);
+  border-bottom: 2px solid var(--yellow);
+  transform: rotate(-45deg);
+  transition: transform 160ms ease;
+  flex: none;
+}
+details[open] > summary .chev { transform: rotate(45deg); }
+/* keep the focus ring inside the panel's rounded corners */
+.panel > details:first-of-type > summary { border-radius: var(--r-xl) var(--r-xl) 0 0; }
+.panel > details:last-of-type:not([open]) > summary { border-radius: 0 0 var(--r-xl) var(--r-xl); }
+
+.details-body {
+  padding: 0 18px 18px;
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.65;
+  animation: reveal 170ms ease-out;
+}
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.details-body p { margin: 0 0 11px; max-width: 62ch; }
+.details-body p:last-child { margin-bottom: 0; }
+.details-body code {
+  background: var(--brown-750);
+  color: var(--yellow-soft);
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 12.5px;
+}
+
+footer { margin-top: 22px; text-align: center; font-size: 12px; color: color-mix(in srgb, var(--faint) 85%, var(--brown-900)); }
+footer:empty { display: none; }   /* no gap under the page until footer text is added */
+/* The line is a button while it cycles and a link once it settles on ko-fi.
+   Both are styled to read as the plain footer text they stand in for. */
+.footer-msg {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  /* Both the button and the link need this. An inline <a> ignores vertical
+     padding in the line box, so without it the footer loses 4px the moment it
+     settles on the link, and a centred page nudges with it. */
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+}
+/* no hover colour: the pointer cursor already says it is clickable */
+.footer-msg:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
+
+/* responsive ------------------------------------------------------ */
+/* Rows and the solution respond to their own panel's width, so they adapt
+   the same way whether the panels are stacked or side by side. */
+/* Four fields abreast need ~732px of panel before the values stop being clipped:
+   each one spends 36.6px on the prefix gutter (4ch) and the suffixed ones another
+   36.6px on the right, so a 96px column leaves barely 20px of readable content.
+   Wrap to two-by-two well before that, which also covers the 680px single-column
+   panel (--shell) that medium screens land on. */
+@container panel (max-width: 760px) {
+  /* trailing auto column keeps the button inline with x and y, as in .row */
+  .row.spotter-detail { grid-template-columns: 112px 1fr 1fr auto; }
+  .row.spotter-detail .row-label { grid-row: span 2; }
+  /* pinned to row 1 so brg and rng wrap underneath x and y, not around the button */
+  .row.spotter-detail .paste-btn { grid-column: 4; grid-row: 1; }
+  /* row 2 has no button, so rng (the last field) widens into that empty cell.
+     Scoped to this block so it covers every width that wraps into two rows */
+  .row.spotter-detail .field:last-of-type { grid-column: 3 / -1; }
+}
+@container panel (max-width: 500px) {
+  .solution { grid-template-columns: 1fr; gap: 18px; }
+  .readout-value { font-size: 36px; }
+}
+@container panel (max-width: 460px) {
+  .row { grid-template-columns: 1fr 1fr; gap: 9px; padding: 12px 13px; }
+  .row-label { grid-column: 1 / -1; }
+  .row .paste-btn { grid-column: 1 / -1; }
+  .row.spotter-detail { grid-template-columns: 1fr 1fr; }
+  .row.spotter-detail .row-label { grid-row: auto; }
+  /* stacked layout: full width like every other row's button. grid-row is reset
+     so the wider breakpoint above does not leave it pinned to row 1. */
+  .row.spotter-detail .paste-btn { grid-column: 1 / -1; grid-row: auto; justify-self: stretch; }
+  /* reset the 3 / -1 span above: this layout only has two columns */
+  .row.spotter-detail .field:last-of-type { grid-column: auto; }
+  .shots { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 620px) {
+  body { padding: 24px 14px; }
+  h1 { font-size: 25px; }
+  .popover { width: min(272px, calc(100vw - 56px)); }
+  .band-tag { font-size: 9.5px; letter-spacing: 0.06em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
