@@ -44,7 +44,9 @@
   "use strict";
   var n = 1 + Math.floor(Math.random() * 3);
   var root = document.documentElement;
-  root.style.setProperty("--bg-image", "url('images/background" + n + "-blur.webp')");
+  /* the url() is resolved where var(--bg-image) is used, i.e. against
+     css/style.css, hence the ../ */
+  root.style.setProperty("--bg-image", "url('../images/background" + n + "-blur.webp')");
   /* the footer cycle advances the backdrop from whichever one landed here */
   root.dataset.bg = n;
 })();

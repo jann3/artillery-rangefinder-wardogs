@@ -624,7 +624,8 @@
   let clicks = 0;
   let bgIdx = Number(root.dataset.bg) || 1;
 
-  const bgUrl = (n) => "url('images/background" + n + "-blur.webp')";
+  // resolved against css/style.css, where the custom property is consumed
+  const bgUrl = (n) => "url('../images/background" + n + "-blur.webp')";
 
   // CSS owns the duration; read it back so the two never drift apart.
   function swapMs() {
