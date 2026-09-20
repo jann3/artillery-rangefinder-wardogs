@@ -253,41 +253,82 @@
             <li>
               <button type="button" class="howto-link" id="copyHowtoBtn" aria-expanded="false" aria-controls="copyHowto">Copy<span class="chev-sm" aria-hidden="true"></span></button>
               and paste or type co-ordinates into the <strong>You</strong> row.
-              <div class="shots" id="copyHowto" hidden>
-                <figure class="shot">
-                  <div class="shot-frame" data-label="Screenshot 1">
-                    <img src="images/wardogs-howto-1.webp" alt="Finding the target position on the in-game map">
-                  </div>
-                  <figcaption>Find your target position on the map <kbd>M</kbd></figcaption>
-                </figure>
-                <figure class="shot">
-                  <div class="shot-frame" data-label="Screenshot 2">
-                    <img src="images/wardogs-howto-2.webp" alt="Right-clicking the map to mark co-ordinates">
-                  </div>
-                  <figcaption>Right-click on the map and mark co-ordinates</figcaption>
-                </figure>
-                <figure class="shot">
-                  <div class="shot-frame" data-label="Screenshot 3">
-                    <img src="images/wardogs-howto-3.webp" alt="Selecting and copying the marked co-ordinates">
-                  </div>
-                  <figcaption><kbd>CTRL</kbd>+<kbd>A</kbd> to select and <kbd>CTRL</kbd>+<kbd>C</kbd> to copy</figcaption>
-                </figure>
-              </div>
             </li>
             <li>Do the same for the <strong>Target</strong> row.</li>
             <li>Read the bearing and range in the <strong>Artillery Rangefinder</strong> panel, then press <strong>Copy bearing/range</strong> to share with your team.</li>
           </ol>
+          <figure class="howto-diagram">
+            <svg viewBox="0 0 300 200" role="img" aria-label="Direct fire: from your position you read the bearing and range straight to the target">
+              <path class="diagram-grid" d="M100 0 V200 M200 0 V200 M0 100 H300"/>
+              <use href="icons/P2-mortar-arc.svg" x="33.12" y="140.9" width="40" height="40"/>
+              <use href="icons/T1-crosshair.svg" x="232.44" y="19.81" width="40" height="40"/>
+              <path class="diagram-head" d="M224.252 52.41 L235.155 53.289 L231.258 63.509 Z"/>
+              <path class="diagram-line" d="M73.153 155.54 L229.235 57.025"/>
+            </svg>
+            <span class="diagram-pin" style="left: 11.04%; top: 70.45%;">
+              <button type="button" class="diagram-hit" aria-label="You" aria-describedby="popDirectYou"></button>
+              <div class="popover" id="popDirectYou" role="tooltip"><strong>You</strong> - your firing position co-ords.</div>
+            </span>
+            <span class="diagram-pin" style="left: 77.48%; top: 9.90%;">
+              <button type="button" class="diagram-hit" aria-label="Target" aria-describedby="popDirectTarget"></button>
+              <div class="popover align-right" id="popDirectTarget" role="tooltip"><strong>Target</strong> - enemy co-ords.</div>
+            </span>
+          </figure>
+          <div class="shots" id="copyHowto" hidden>
+            <figure class="shot">
+              <div class="shot-frame" data-label="Screenshot 1">
+                <img src="images/wardogs-howto-1.webp" alt="Finding the target position on the in-game map">
+              </div>
+              <figcaption>Find your target position on the map <kbd>M</kbd></figcaption>
+            </figure>
+            <figure class="shot">
+              <div class="shot-frame" data-label="Screenshot 2">
+                <img src="images/wardogs-howto-2.webp" alt="Right-clicking the map to mark co-ordinates">
+              </div>
+              <figcaption>Right-click on the map and mark co-ordinates</figcaption>
+            </figure>
+            <figure class="shot">
+              <div class="shot-frame" data-label="Screenshot 3">
+                <img src="images/wardogs-howto-3.webp" alt="Selecting and copying the marked co-ordinates">
+              </div>
+              <figcaption><kbd>CTRL</kbd>+<kbd>A</kbd> to select and <kbd>CTRL</kbd>+<kbd>C</kbd> to copy</figcaption>
+            </figure>
+          </div>
         </div>
 
         <div class="howto-group">
           <h3 class="howto-head"><span class="howto-mode">Called in fire</span> - a spotter marks the target</h3>
           <p class="howto-sub">Someone else has eyes on and calls a bearing and range from where they are standing.</p>
           <ol class="howto">
-            <li>Paste or type your own co-ordinates into the <strong>You</strong> row, as above.</li>
-            <li>Tick <strong>Target called in by a spotter</strong>.
+            <li>Copy and paste or type your own co-ordinates into the <strong>You</strong> row, as above.</li>
+            <li>Tick <strong>Target called in by a spotter</strong>.</li>
             <li>Enter the <strong>spotter</strong>'s map co-ordinates, then the <strong>bearing</strong> and <strong>range</strong> they called to the target.</li>
             <li>The <strong>Target</strong> row fills in with the worked-out position. Check it against the map before firing.</li>
           </ol>
+          <figure class="howto-diagram">
+            <svg viewBox="0 0 300 200" role="img" aria-label="Called in fire: the spotter's bearing and range from their position locate the target, then you fire from yours">
+              <path class="diagram-grid" d="M100 0 V200 M200 0 V200 M0 100 H300"/>
+              <use href="icons/P2-mortar-arc.svg" x="23.14" y="106.47" width="40" height="40"/>
+              <use href="icons/S1-eye-on-scope.svg" x="194.97" y="147.96" width="40" height="40"/>
+              <use class="diagram-icon-dim" href="icons/T1-crosshair.svg" x="218.0" y="17.9" width="40" height="40"/>
+              <path class="diagram-head" d="M210.598 45.271 L221.312 47.467 L216.204 57.138 Z"/>
+              <path class="diagram-line" stroke-dasharray="5.833 8.75" d="M65.893 120.885 L214.983 50.457"/>
+              <path class="diagram-head" d="M225.504 65.323 L233.512 57.873 L238.422 67.646 Z"/>
+              <path class="diagram-line" d="M218 144.154 L232.273 64.762"/>
+            </svg>
+            <span class="diagram-pin" style="left: 7.71%; top: 53.23%;">
+              <button type="button" class="diagram-hit" aria-label="You" aria-describedby="popIndirectYou"></button>
+              <div class="popover" id="popIndirectYou" role="tooltip"><strong>You</strong> - your firing position co-ords.</div>
+            </span>
+            <span class="diagram-pin" style="left: 64.99%; top: 73.98%;">
+              <button type="button" class="diagram-hit" aria-label="Spotter" aria-describedby="popIndirectSpotter"></button>
+              <div class="popover align-right" id="popIndirectSpotter" role="tooltip"><strong>Spotter</strong> - co-ords, range and bearing required.</div>
+            </span>
+            <span class="diagram-pin" style="left: 72.67%; top: 8.95%;">
+              <button type="button" class="diagram-hit" aria-label="Target" aria-describedby="popIndirectTarget"></button>
+              <div class="popover align-right" id="popIndirectTarget" role="tooltip"><strong>Target</strong> - co-ords not required.</div>
+            </span>
+          </figure>
         </div>
 
         <p class="howto-note">Either way, pasting co-ordinates directly from the game in the format <code>x98.43, y110.38</code> fills both fields of a row and moves to the next row.</p>
@@ -300,7 +341,7 @@
         <p>Range uses Pythagoras. Subtract the positions to get <code>dx</code> and <code>dy</code>, square and add them, take the square root, then multiply by 100 for metres.</p>
         <p>Bearing uses <code>atan2(dx, dy)</code>, with x first and y second. This gives degrees clockwise from north, as the guns use. Negative results have 360 added.</p>
         <p>Always subtract <em>target minus you</em>, or the bearing is reversed. The range is the same either way. The grid assumes y increases towards north.</p>
-        <p>Grid solutions only. No elevation, windage/drift or charge tables. With Wardogs being in Steam's Early Access phase this is all subject to change.</p>
+        <p>These firing solutions are based only off of the map grid. No elevation, windage/drift or charge adjustments. With Wardogs being in Steam's Early Access phase this is all subject to change.</p>
         <p id="mathLive"></p>
       </div>
     </details>
@@ -319,7 +360,7 @@
       <div class="details-body">
         <p>The <strong>L81 Mortar</strong> fires from 52 M to 685 M. The <strong>SPH-2 Artillery</strong> fires from 745 M to 2660 M.</p>
         <p>Targets from 686 M to 744 M fall in a dead band: too far for the mortar and too close for the artillery. Move the gun to get in range.</p>
-        <p>Range is measured flat across the grid. Elevation, drift and charge are not included.</p>
+        <p>As range is measured flat across the grid. Elevation could change these bands slightly, particularly in the case of Artillery.</p>
       </div>
     </details>
   </section>

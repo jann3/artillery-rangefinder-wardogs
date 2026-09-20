@@ -468,14 +468,21 @@
     });
   }
 
-  // Shift an open popover sideways if it would run off the edge of the screen.
-  function keepOnScreen(pop) {
+  // Shift an open popover sideways if it would run off the edge of the screen,
+  // or off the edge of `within` (an element) when one is given.
+  function keepOnScreen(pop, within) {
     pop.style.removeProperty("--nudge");
     const box = pop.getBoundingClientRect();
     const gutter = 12;
-    const right = document.documentElement.clientWidth - gutter;
+    let left = gutter;
+    let right = document.documentElement.clientWidth - gutter;
+    if (within) {
+      const edge = within.getBoundingClientRect();
+      left = Math.max(left, edge.left + gutter);
+      right = Math.min(right, edge.right - gutter);
+    }
     let nudge = 0;
-    if (box.left < gutter) nudge = gutter - box.left;
+    if (box.left < left) nudge = left - box.left;
     else if (box.right > right) nudge = right - box.right;
     if (nudge) pop.style.setProperty("--nudge", Math.round(nudge) + "px");
   }
@@ -490,6 +497,23 @@
       btn.setAttribute("aria-expanded", String(!open));
       if (!open) keepOnScreen(pop);
     });
+  });
+
+  // Diagram icons: the popover follows hover and keyboard focus rather than a click.
+  document.querySelectorAll(".diagram-hit").forEach((hit) => {
+    const pop = document.getElementById(hit.getAttribute("aria-describedby"));
+    const show = () => {
+      closeAllPopovers();
+      pop.dataset.open = "true";
+      keepOnScreen(pop, hit.closest(".panel"));   // the diagram sits at the panel's edge
+    };
+    const hide = () => { pop.dataset.open = "false"; };
+    hit.addEventListener("mouseenter", show);
+    hit.addEventListener("focus", show);
+    hit.addEventListener("mouseleave", hide);
+    hit.addEventListener("blur", hide);
+    // a tap or click here would otherwise reach the document handler below and close it again
+    hit.addEventListener("click", (ev) => ev.stopPropagation());
   });
 
   document.addEventListener("click", (ev) => {
@@ -600,8 +624,15 @@
     "Just as the founding fathers intended",
     "They're using artillery on us!",
     "Do you know who's in command here?",
+    "Hold on to your butts",
     "Verify range to target, one ping only",
-    "Have mercy"
+    "Are we the baddies?",
+    "I have calculated the trajectory",
+    "You got time to duck?",
+    "I'm blue, da-ba-dee, da-ba-di",
+    "Send it",
+    "That's a lot of artillery",
+    "Have mercy on blue"
   ];
   const FOOTER_LAST = { text: "Buy me a coffee here.", href: "https://ko-fi.com/jann3" };
   const BG_COUNT = 3;
@@ -662,7 +693,12 @@
     a.href = FOOTER_LAST.href;
     a.target = "_blank";
     a.rel = "noopener noreferrer";
-    a.textContent = FOOTER_LAST.text;
+    a.append(FOOTER_LAST.text + " ");
+    const heart = document.createElement("span");
+    heart.className = "footer-heart";
+    heart.setAttribute("aria-label", "heart");
+    heart.textContent = "<3";
+    a.append(heart);
     return a;
   }
 

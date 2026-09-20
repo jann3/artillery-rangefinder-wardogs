@@ -296,12 +296,84 @@ header {
 .howto-mode { color: var(--yellow-soft); }
 /* both opt out of the 62ch measure .details-body p sets: the steps they sit with
    are unconstrained, so keeping it makes these two wrap short of everything else */
-.details-body .howto-sub { margin: -6px 0 10px; color: var(--muted); font-size: 12.5px; max-width: none; }
+.details-body .howto-sub { margin: -6px 0 7px; color: var(--muted); font-size: 12.5px; max-width: none; }
 .howto-group + .howto-group {
   margin-top: 18px;
   padding-top: 16px;
   border-top: 1px solid var(--line);
 }
+
+/* steps take three quarters, the diagram the last quarter; the Copy screenshots (.shots) and the
+   rules between groups still span both columns. Stacked until the panel is wide enough. */
+@container panel (min-width: 520px) {
+  .howto-group {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+    /* the diagram spans the first three rows; if it is taller than the text, the list row
+       (1fr) soaks up the difference so the heading and description stay together */
+    grid-template-rows: auto auto 1fr auto;
+    column-gap: 22px;
+    align-items: start;
+  }
+  .howto-group > * { grid-column: 1; }
+  .howto-group > .howto-diagram { grid-column: 2; grid-row: 1 / span 3; align-self: start; }
+  .howto-group > .shots { grid-column: 1 / -1; }
+}
+.howto-diagram {
+  position: relative;
+  margin: 14px 0 0;
+  max-width: 300px;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--brown-850);
+}
+/* icons come from /icons through <use>, so they pick up the same --icon-color and
+   --icon-accent as the inline icons above; the arrows are drawn here in --muted */
+/* each icon gets a transparent hit area over it, positioned in the same 300 x 200 units as the
+   drawing (40 units = 13.33% x 20%), with its popover as a sibling like .help-wrap */
+.diagram-pin {
+  position: absolute;
+  width: 13.3333%;
+  height: 20%;
+}
+.diagram-hit {
+  position: absolute;
+  inset: -4px;
+  padding: 0;
+  border-radius: 50%;
+  transition: background-color 130ms ease;
+}
+.diagram-hit:hover { background: var(--yellow-wash); }
+.diagram-hit:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
+/* these are short labels, so size to the text; the arrow sits over the icon's centre */
+.diagram-pin .popover {
+  width: max-content;
+  max-width: min(240px, calc(100vw - 56px));
+  left: calc(50% - 17px);
+}
+.diagram-pin .popover.align-right { left: auto; right: calc(50% - 17px); }
+.howto-diagram svg { display: block; width: 100%; height: 100%; color: var(--icon-color); }
+/* decorative 3 x 2 grid behind the drawing, to suggest map co-ordinates: a step or two
+   above the panel background, well below --muted so the arrows still lead */
+.diagram-grid {
+  fill: none;
+  stroke: color-mix(in srgb, var(--muted) 25%, var(--brown-850));
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;   /* stays a crisp 1px however far the diagram scales */
+}
+.diagram-line {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 2.92;
+  stroke-linecap: square;
+  stroke-linejoin: round;
+}
+/* an icon that plays no part in this drill (the called-in target's co-ords are not needed)
+   drops from --icon-color to --text-2; the accent still comes from --icon-accent */
+.howto-diagram .diagram-icon-dim { color: var(--text-2); }
+.diagram-head { fill: var(--muted); }
+@container panel (min-width: 520px) { .howto-diagram { margin: 0; max-width: none; } }
 /* the paste shorthand applies to both drills, so it sits under them rather than inside one */
 .details-body .howto-note {
   margin: 16px 0 0;
@@ -655,7 +727,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
 #dial .cardinal.ordinal { fill: color-mix(in srgb, var(--faint) 72%, transparent); }
 #dial .spot-link   { stroke: color-mix(in srgb, var(--text) 22%, transparent); }
 #dial .spot-ray    { stroke: color-mix(in srgb, var(--text) 14%, transparent); }
-#dial .spot-dot    { fill: var(--brown-800); stroke: var(--text-2); }
+#dial .spot-dot    { fill: var(--brown-800); stroke: var(--muted); }
 #dial .spot-label  { fill: var(--text-2); }
 #dial .arc         { fill: none; stroke: color-mix(in srgb, var(--hot) 50%, transparent); }
 #dial .north-line  { stroke: color-mix(in srgb, var(--yellow) 28%, transparent); }
@@ -911,6 +983,8 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
   cursor: pointer;
   text-decoration: none;
 }
+/* the <3 on the ko-fi link; same hot pink as the footer heart on janne.dev/chat-color */
+.footer-heart { color: #ff1169; }
 /* no hover colour: the pointer cursor already says it is clickable */
 .footer-msg:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
 
