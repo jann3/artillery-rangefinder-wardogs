@@ -1,10 +1,4 @@
-/* ============================================================
-   FONTS
-   Self-hosted from fonts/, latin subset only — nothing on the page sits
-   outside it. Inter ships as a variable font, so one file covers the 400
-   and 600 the design uses; Saira Condensed is static, so 600 and 700 are
-   separate files. No other weights are referenced anywhere in this file.
-   ============================================================ */
+/* Fonts: self-hosted latin subsets (Inter is variable, Saira Condensed is static) */
 @font-face {
   font-family: 'Inter';
   font-style: normal;
@@ -30,15 +24,8 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* ============================================================
-   BACKGROUND IMAGE
-   One of images/background1-3-blur.webp is picked per load by the
-   script in <head>; the line below is the no-JS fallback. Paths in this
-   file resolve against css/, not the page's <base>, hence the ../.
-   Those files ship pre-blurred, so no runtime blur() is needed; the
-   sharp originals are kept alongside them as the source to re-export from.
-   Delete the line to fall back to the gradient.
-   ============================================================ */
+/* Background: picked per load by the script in <head>; --bg-image is the no-JS
+   fallback. Paths resolve against css/, hence the ../ */
 :root {
   --bg-image: url('../images/background1-blur.webp');
   --bg-brightness: 0.65;       /* 1 = image at full brightness */
@@ -46,18 +33,13 @@
   --bg-overlay-bottom: 57.4%;  /* dark overlay strength, bottom of screen */
   --bg-fade: 2s;               /* how long the backdrop takes to fade in */
   --bg-swap: 1.1s;             /* cross-fade when the footer cycles the backdrop */
-  /* shared by both backdrop layers, so the tint is defined in one place */
   --bg-gradients:
     radial-gradient(closest-side at 22% 18%, color-mix(in srgb, var(--yellow) 22%, transparent), transparent 70%),
     radial-gradient(closest-side at 82% 72%, color-mix(in srgb, color-mix(in srgb, var(--yellow-dim) 85%, black) 30%, transparent), transparent 72%),
     radial-gradient(closest-side at 55% 105%, color-mix(in srgb, var(--line) 55%, transparent), transparent 70%);
 }
 
-/* ============================================================
-   THEME
-   Tweak the base colours. Every tint, border, the compass dial
-   and the icons are mixed from them further down.
-   ============================================================ */
+/* Theme: tweak the base colours; tints, borders, the dial and icons are mixed from them. */
 :root {
   /* browns, darkest to lightest */
   --brown-900: #121210;   /* page background */
@@ -127,13 +109,9 @@ body {
   align-items: center;  /* centres vertically; taller pages just scroll from the top */
 }
 
-/* Two identical backdrop layers. body::before carries the image in play and
-   html::before carries the incoming one, fading in over the top, so cycling the
-   footer cross-fades instead of dipping through the flat page colour. When the
-   fade ends the base layer adopts the new image and the top layer is cleared
-   behind an identical picture, which makes the reset invisible.
-   Both sit on negative z-indexes: body's own background propagates to the canvas,
-   so nothing paints over them. */
+/* Two backdrop layers: body::before is the current image, html::before the
+   incoming one that fades in over it. Afterwards the base adopts the new image
+   and the top layer is cleared. */
 html::before,
 body::before {
   content: "";
@@ -143,17 +121,13 @@ body::before {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  /* No blur() here: the backdrops ship pre-blurred, which drops a full-viewport
-     convolution on load and on every resize, and takes the three images from
-     168 KB to 3.8 KB. saturate and brightness are cheap per-pixel ops and stay,
-     so --bg-brightness above remains tunable. */
+  /* no blur(): the images ship pre-blurred */
   filter: saturate(0.7) brightness(var(--bg-brightness));
   transform: scale(1.06);
 }
 body::before {
   z-index: -3;
   background-image: var(--bg-gradients), var(--bg-image, none);
-  /* resolve out of the flat page colour rather than snapping in */
   animation: bg-fade-in var(--bg-fade) ease-in-out forwards;
 }
 html::before {
@@ -204,14 +178,14 @@ strong { color: var(--white); font-weight: 600; }
 .strapline { color: var(--text-2); font-size: 13.5px; margin: 4px 0 22px; }
 .strapline code { color: var(--yellow-soft); }
 
-/* soft dark halo so the title and subtitle stay readable over the background image */
+/* dark halo keeps the title readable over the background */
 header {
   text-shadow:
     0 0 6px color-mix(in srgb, var(--brown-900) 85%, transparent),
     0 0 18px color-mix(in srgb, var(--brown-900) 65%, transparent);
 }
 
-/* panels ---------------------------------------------------------- */
+/* panels */
 .panel {
   position: relative;
   container: panel / inline-size;
@@ -220,19 +194,15 @@ header {
     color-mix(in srgb, var(--brown-850) 94%, transparent));
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
-  /* No backdrop-filter here on purpose. What sits behind these panels is
-     body::before, already blurred to 34px, so blurring it again by 14px was
-     imperceptible (measured: 0% of pixels differed by more than 2/255) while
-     costing three per-frame backdrop samples and three extra composited layers. */
+  /* no backdrop-filter: the background is already blurred */
   box-shadow: 0 18px 44px color-mix(in srgb, var(--shadow) 45%, transparent);
 }
 .panel + .panel,
 .duo + .panel { margin-top: 16px; }
-/* panels are positioned, so a later one paints over an earlier one's popover;
-   lift the whole panel while one of its popovers is open */
+/* lift a panel above its siblings while one of its popovers is open */
 .panel:has(.popover[data-open="true"]) { z-index: 50; }
 
-/* two-up layout --------------------------------------------------- */
+/* two-up layout */
 @container shell (min-width: 1040px) {
   .shell > * { max-width: none; }
   .duo {
@@ -255,7 +225,7 @@ header {
 }
 .panel-body { padding: 18px; }
 
-/* how to use ------------------------------------------------------ */
+/* how to use */
 .howto { counter-reset: step; margin: 0; padding: 0; list-style: none; }
 .howto li {
   counter-increment: step;
@@ -283,7 +253,6 @@ header {
 }
 .howto code { color: var(--yellow-soft); background: var(--brown-750); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
 
-/* the two firing methods read as separate drills, so each gets its own heading and count */
 .howto-head {
   font-family: 'Saira Condensed', sans-serif;
   font-size: 13px;
@@ -294,8 +263,7 @@ header {
   margin: 0 0 9px;
 }
 .howto-mode { color: var(--yellow-soft); }
-/* both opt out of the 62ch measure .details-body p sets: the steps they sit with
-   are unconstrained, so keeping it makes these two wrap short of everything else */
+/* opt out of the 62ch measure from .details-body p */
 .details-body .howto-sub { margin: -6px 0 7px; color: var(--muted); font-size: 12.5px; max-width: none; }
 .howto-group + .howto-group {
   margin-top: 18px;
@@ -303,14 +271,12 @@ header {
   border-top: 1px solid var(--line);
 }
 
-/* steps take three quarters, the diagram the last quarter; the Copy screenshots (.shots) and the
-   rules between groups still span both columns. Stacked until the panel is wide enough. */
+/* steps take three quarters, the diagram the last; stacked when narrow */
 @container panel (min-width: 520px) {
   .howto-group {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
-    /* the diagram spans the first three rows; if it is taller than the text, the list row
-       (1fr) soaks up the difference so the heading and description stay together */
+    /* diagram spans the first three rows; the 1fr row absorbs extra height */
     grid-template-rows: auto auto 1fr auto;
     column-gap: 22px;
     align-items: start;
@@ -328,10 +294,8 @@ header {
   border: 1px solid var(--line);
   background: var(--brown-850);
 }
-/* icons come from /icons through <use>, so they pick up the same --icon-color and
-   --icon-accent as the inline icons above; the arrows are drawn here in --muted */
-/* each icon gets a transparent hit area over it, positioned in the same 300 x 200 units as the
-   drawing (40 units = 13.33% x 20%), with its popover as a sibling like .help-wrap */
+/* icons come from icons/ via <use>; arrows use --muted */
+/* hit areas use the drawing's 300 x 200 units (40 units = 13.33% x 20%) */
 .diagram-pin {
   position: absolute;
   width: 13.3333%;
@@ -346,7 +310,7 @@ header {
 }
 .diagram-hit:hover { background: var(--yellow-wash); }
 .diagram-hit:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
-/* these are short labels, so size to the text; the arrow sits over the icon's centre */
+/* size to the text; arrow sits over the icon centre */
 .diagram-pin .popover {
   width: max-content;
   max-width: min(240px, calc(100vw - 56px));
@@ -354,13 +318,12 @@ header {
 }
 .diagram-pin .popover.align-right { left: auto; right: calc(50% - 17px); }
 .howto-diagram svg { display: block; width: 100%; height: 100%; color: var(--icon-color); }
-/* decorative 3 x 2 grid behind the drawing, to suggest map co-ordinates: a step or two
-   above the panel background, well below --muted so the arrows still lead */
+/* decorative grid, faint so the arrows lead */
 .diagram-grid {
   fill: none;
   stroke: color-mix(in srgb, var(--muted) 25%, var(--brown-850));
   stroke-width: 1;
-  vector-effect: non-scaling-stroke;   /* stays a crisp 1px however far the diagram scales */
+  vector-effect: non-scaling-stroke;   /* stays 1px when scaled */
 }
 .diagram-line {
   fill: none;
@@ -369,12 +332,10 @@ header {
   stroke-linecap: square;
   stroke-linejoin: round;
 }
-/* an icon that plays no part in this drill (the called-in target's co-ords are not needed)
-   drops from --icon-color to --text-2; the accent still comes from --icon-accent */
+/* icon not used in this drill */
 .howto-diagram .diagram-icon-dim { color: var(--text-2); }
 .diagram-head { fill: var(--muted); }
 @container panel (min-width: 520px) { .howto-diagram { margin: 0; max-width: none; } }
-/* the paste shorthand applies to both drills, so it sits under them rather than inside one */
 .details-body .howto-note {
   margin: 16px 0 0;
   padding-top: 14px;
@@ -449,7 +410,7 @@ header {
   color: var(--text);
 }
 
-/* position rows --------------------------------------------------- */
+/* position rows */
 .row {
   display: grid;
   grid-template-columns: 112px 1fr 1fr auto;
@@ -469,7 +430,7 @@ header {
 /* spotter on: mute the target title so the two inputs read as either/or */
 .row.is-derived .row-label { color: var(--muted); --icon-color: var(--muted); --icon-accent: var(--muted); }
 .row.is-off { opacity: 0.42; }
-/* trailing auto column matches .row, so the paste button sits beside the fields */
+/* trailing auto column for the paste button, as in .row */
 .row.spotter-detail { grid-template-columns: 112px repeat(4, 1fr) auto; }
 
 .row-label {
@@ -484,10 +445,9 @@ header {
   gap: 6px;
 }
 
-/* icons ----------------------------------------------------------- */
-/* Inline SVGs from /icons: strokes use currentColor, the .accent part uses
-   --icon-accent. Set --icon-color or --icon-accent on any ancestor to recolour.
-   :where() keeps these rules at zero specificity so they are easy to override. */
+/* icons */
+/* Inline SVGs: strokes use currentColor, .accent uses --icon-accent.
+   :where() keeps specificity at zero. */
 .icon {
   width: 18px; height: 18px;
   flex: none;
@@ -496,7 +456,7 @@ header {
 :where(.icon .accent[stroke]:not([stroke="none"])) { stroke: var(--icon-accent); }
 :where(.icon .accent[fill]:not([fill="none"])) { fill: var(--icon-accent); }
 
-/* inputs ---------------------------------------------------------- */
+/* inputs */
 .field { position: relative; display: flex; align-items: center; }
 .field-prefix,
 .field-suffix {
@@ -510,12 +470,7 @@ header {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-/* The unit trails the value instead of pinning to the field's right edge, so a
-   stretched input cannot strand it. CSS cannot see an input's rendered text
-   width, so placeUnit() measures it and sets --suffix-x. Until it does, or while
-   the field is empty, the unit stays hidden rather than floating over a
-   placeholder. No right gutter is reserved any more: the unit follows the value,
-   so the two can no longer collide. */
+/* the unit trails the value: placeUnit() sets --suffix-x; hidden until then and while empty */
 .field-suffix {
   left: var(--suffix-x, 12px);
   right: auto;
@@ -553,7 +508,7 @@ input[type="text"][readonly] {
 input.is-bad { border-color: var(--red); }
 input.is-bad:focus { box-shadow: 0 0 0 3px var(--red-wash); }
 
-/* checkbox -------------------------------------------------------- */
+/* checkbox */
 .check {
   display: inline-flex;
   align-items: center;
@@ -596,7 +551,7 @@ input.is-bad:focus { box-shadow: 0 0 0 3px var(--red-wash); }
   border-top: 1px dashed var(--line-soft);
 }
 
-/* buttons --------------------------------------------------------- */
+/* buttons */
 button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; background: none; color: inherit; }
 
 .btn {
@@ -632,14 +587,11 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
 .paste-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
 .paste-btn:disabled { cursor: not-allowed; opacity: 0.4; }
 
-/* help + popovers ------------------------------------------------- */
+/* help + popovers */
 .help-wrap { position: relative; display: inline-flex; }
 .help {
   width: 17px; height: 17px;
-  /* Chrome's UA stylesheet gives buttons padding-inline: 6px, leaving only a 3px
-     content box inside this 17px circle. The ~6px glyph cannot centre in 3px, so
-     Chrome pins it to the start edge and it spills right; Firefox overflows it
-     evenly and looks centred. Zeroing the padding centres it the same in both. */
+  /* zero the default padding so the glyph centres in Chrome */
   padding: 0;
   border-radius: 50%;
   border: 1px solid var(--line);
@@ -711,7 +663,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* solution -------------------------------------------------------- */
+/* solution */
 .solution { display: grid; grid-template-columns: 232px 1fr; gap: 22px; align-items: center; }
 .dial-wrap { display: grid; place-items: center; }
 
@@ -777,7 +729,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
 .readout.is-out .readout-label { color: var(--red-soft); }
 .readout.is-out .readout-value { color: var(--red-soft); }
 
-/* weapon envelopes ------------------------------------------------ */
+/* weapon envelopes */
 .envelopes { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
 
 .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -874,8 +826,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
 .scale span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .scale span.edge-l { transform: none; left: 0; }
 .scale span.edge-r { transform: none; right: 0; }
-/* 685 and 745 are only ~2% apart and would collide when centred on their
-   ticks, so face them outward from the dead zone between the two bands */
+/* face 685 and 745 outward so they don't collide */
 .scale span.pair-l { transform: translateX(calc(-100% - 3px)); }
 .scale span.pair-r { transform: translateX(3px); }
 
@@ -894,7 +845,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   border-color: var(--red-edge);
   color: var(--red-soft);
 }
-/* empty ----------------------------------------------------------- */
+/* empty */
 .empty { padding: 34px 20px; text-align: center; color: var(--muted); font-size: 14px; }
 
 .actions {
@@ -909,7 +860,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
 .status { margin-top: 12px; font-size: 13px; color: var(--yellow-soft); min-height: 19px; }
 .status.err { color: var(--red-soft); }
 
-/* collapsibles ---------------------------------------------------- */
+/* collapsibles */
 details { border-top: 1px solid var(--line-soft); }
 details:first-of-type { border-top: none; }
 
@@ -967,16 +918,13 @@ details[open] > summary .chev { transform: rotate(45deg); }
 
 footer { margin-top: 22px; text-align: center; font-size: 12px; color: color-mix(in srgb, var(--faint) 85%, var(--brown-900)); }
 footer:empty { display: none; }   /* no gap under the page until footer text is added */
-/* The line is a button while it cycles and a link once it settles on ko-fi.
-   Both are styled to read as the plain footer text they stand in for. */
+/* a button while cycling, a link once it settles on ko-fi; both look like plain text */
 .footer-msg {
   font: inherit;
   color: inherit;
   background: none;
   border: none;
-  /* Both the button and the link need this. An inline <a> ignores vertical
-     padding in the line box, so without it the footer loses 4px the moment it
-     settles on the link, and a centred page nudges with it. */
+  /* an inline <a> ignores vertical padding, which would shift the footer on the link */
   display: inline-block;
   padding: 2px 7px;
   border-radius: 6px;
@@ -988,22 +936,15 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
 /* no hover colour: the pointer cursor already says it is clickable */
 .footer-msg:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
 
-/* responsive ------------------------------------------------------ */
-/* Rows and the solution respond to their own panel's width, so they adapt
-   the same way whether the panels are stacked or side by side. */
-/* Four fields abreast need ~732px of panel before the values stop being clipped:
-   each one spends 36.6px on the prefix gutter (4ch) and the suffixed ones another
-   36.6px on the right, so a 96px column leaves barely 20px of readable content.
-   Wrap to two-by-two well before that, which also covers the 680px single-column
-   panel (--shell) that medium screens land on. */
+/* responsive */
+/* Rows and the solution respond to their panel's width, not the viewport.
+   Four fields abreast need ~732px before values clip, so wrap to two-by-two below that. */
 @container panel (max-width: 760px) {
-  /* trailing auto column keeps the button inline with x and y, as in .row */
   .row.spotter-detail { grid-template-columns: 112px 1fr 1fr auto; }
   .row.spotter-detail .row-label { grid-row: span 2; }
-  /* pinned to row 1 so brg and rng wrap underneath x and y, not around the button */
+  /* pinned to row 1 so brg and rng wrap underneath x and y */
   .row.spotter-detail .paste-btn { grid-column: 4; grid-row: 1; }
-  /* row 2 has no button, so rng (the last field) widens into that empty cell.
-     Scoped to this block so it covers every width that wraps into two rows */
+  /* row 2 has no button, so rng widens into the empty cell */
   .row.spotter-detail .field:last-of-type { grid-column: 3 / -1; }
 }
 @container panel (max-width: 500px) {
@@ -1016,8 +957,7 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
   .row .paste-btn { grid-column: 1 / -1; }
   .row.spotter-detail { grid-template-columns: 1fr 1fr; }
   .row.spotter-detail .row-label { grid-row: auto; }
-  /* stacked layout: full width like every other row's button. grid-row is reset
-     so the wider breakpoint above does not leave it pinned to row 1. */
+  /* full width, and no longer pinned to row 1 */
   .row.spotter-detail .paste-btn { grid-column: 1 / -1; grid-row: auto; justify-self: stretch; }
   /* reset the 3 / -1 span above: this layout only has two columns */
   .row.spotter-detail .field:last-of-type { grid-column: auto; }

@@ -6,11 +6,10 @@
 <title>Wardogs Artillery Rangefinder</title>
 <base href="/rangefinder/">
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
-<!-- fonts are self-hosted in fonts/ and declared in css/style.css; these two carry
-     the body and heading text, so they are fetched alongside the stylesheet -->
+<!-- body and heading fonts, fetched alongside the stylesheet -->
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/saira-condensed-600-latin.woff2" as="font" type="font/woff2" crossorigin>
-<!-- all three are ~1 KB; fetching them up front keeps the backdrop cross-fade smooth -->
+<!-- tiny files; fetching them up front keeps the backdrop cross-fade smooth -->
 <link rel="prefetch" href="images/background1-blur.webp" as="image" type="image/webp">
 <link rel="prefetch" href="images/background2-blur.webp" as="image" type="image/webp">
 <link rel="prefetch" href="images/background3-blur.webp" as="image" type="image/webp">
@@ -37,17 +36,14 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<meta name="language" content="English">
 <script>
-/* Picks the backdrop for this load. Runs before first paint, so the
-   --bg-image fallback in css/style.css is only ever seen without JS.
-   Stays inline: an external file would land after first paint. */
+/* Picks the backdrop for this load. Inline so it runs before first paint. */
 (function () {
   "use strict";
   var n = 1 + Math.floor(Math.random() * 3);
   var root = document.documentElement;
-  /* the url() is resolved where var(--bg-image) is used, i.e. against
-     css/style.css, hence the ../ */
+  // url() resolves against css/style.css, hence the ../
   root.style.setProperty("--bg-image", "url('../images/background" + n + "-blur.webp')");
-  /* the footer cycle advances the backdrop from whichever one landed here */
+  // the footer cycle continues from this backdrop
   root.dataset.bg = n;
 })();
 </script>
@@ -63,7 +59,7 @@
 
   <div class="duo">
 
-    <!-- ── POSITIONS ─────────────────────────────────────────────── -->
+    <!-- Positions -->
     <section class="panel">
       <div class="panel-head">
         <h2>Positions</h2>
@@ -181,7 +177,7 @@
       </div>
     </section>
 
-    <!-- ── SOLUTION ──────────────────────────────────────────────── -->
+    <!-- Solution -->
     <section class="panel">
       <div class="panel-head"><h2>Artillery Rangefinder</h2></div>
       <div class="panel-body">
@@ -201,12 +197,12 @@
             <div class="readouts">
               <div class="readout" id="bearingCard">
                 <div class="readout-label">Bearing</div>
-                <div class="readout-value" id="outBearing">—</div>
+                <div class="readout-value" id="outBearing"></div>
                 <div class="readout-sub" id="outBearingSub"></div>
               </div>
               <div class="readout" id="rangeCard">
                 <div class="readout-label">Range</div>
-                <div class="readout-value" id="outRange">—</div>
+                <div class="readout-value" id="outRange"></div>
                 <div class="readout-sub" id="outRangeSub"></div>
               </div>
             </div>
@@ -241,7 +237,7 @@
 
   </div>
 
-  <!-- ── WORKINGS ──────────────────────────────────────────────── -->
+  <!-- Guides -->
   <section class="panel">
     <details name="guide">
       <summary><span class="chev"></span>How to use</summary>

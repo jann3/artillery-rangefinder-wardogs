@@ -33,7 +33,7 @@
     el.copyBtn.disabled = !sol;
   }
 
-  /* ---------- helpers ---------- */
+  /* helpers */
 
   const num = (input) => {
     const v = parseFloat(String(input.value).replace(/[^0-9.\-]/g, ""));
@@ -51,8 +51,8 @@
     return String(Math.round(deg) % 360).padStart(3, "0");
   }
 
-  // Eight 45° sectors centred on the compass points, split on the exact bearing:
-  // 22.4 is N (shown 022), 22.5 is NE (shown 023), so the letters always match the digits.
+  // Eight 45° sectors split on the exact bearing (22.4 is N, 22.5 is NE),
+  // so the letters always match the rounded digits.
   const sector = (deg) => Math.round(deg / 45) % 8;
 
   function compassPoint(deg) {
@@ -64,7 +64,7 @@
     return ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][sector(deg)];
   }
 
-  /* ---------- pasting ---------- */
+  /* pasting */
 
   function numbersIn(text) {
     const found = String(text).match(/-?\d+(?:\.\d+)?/g);
@@ -129,7 +129,7 @@
     });
   });
 
-  /* ---------- maths ---------- */
+  /* maths */
 
   function solve(you, target) {
     const dx = target.x - you.x;
@@ -146,7 +146,7 @@
     return { x: sp.x + r * Math.sin(rad), y: sp.y + r * Math.cos(rad) };
   }
 
-  /* ---------- weapon envelope check ---------- */
+  /* weapon envelope check */
 
   function assess(m) {
     const inMortar = m >= MORTAR.min && m <= MORTAR.max;
@@ -208,7 +208,7 @@
       '<span class="edge-r">' + ARTY.max + ' M</span>';
   }
 
-  /* ---------- spotter ---------- */
+  /* spotter */
 
   // Compass letters beside the spotter's bearing, e.g. 235 shows SW.
   function updateBearingSuffix() {
@@ -216,9 +216,8 @@
     el.spBrgDir.textContent = brg !== null && brg >= 0 && brg <= 360 ? compassAbbr(brg) : "";
   }
 
-  /* An input's rendered text width is invisible to CSS, so mirror the value in
-     a hidden span that borrows the same typography and measure that instead.
-     One span serves every field; it is only ever read synchronously. */
+  // CSS cannot see an input's text width, so mirror the value in a hidden span
+  // with the same typography and measure that. One span serves every field.
   const unitMirror = document.createElement("span");
   unitMirror.setAttribute("aria-hidden", "true");
   unitMirror.style.cssText =
@@ -246,7 +245,7 @@
 
     const border = parseFloat(cs.borderLeftWidth);
     const x = border + parseFloat(cs.paddingLeft) + unitMirror.offsetWidth + 6;
-    // never let an unexpectedly long value push the unit out of the box
+    // keep the unit inside the box
     const limit = border + input.clientWidth - parseFloat(cs.paddingRight) - unit.offsetWidth;
     field.style.setProperty("--suffix-x", Math.min(x, limit) + "px");
   }
@@ -272,7 +271,7 @@
       : "Spotter off. Enter the target co-ordinates.");
   });
 
-  /* ---------- recalc ---------- */
+  /* recalc */
 
   function recalc() {
     updateBearingSuffix();
@@ -351,7 +350,7 @@
     drawDial(you, s);
   }
 
-  /* ---------- dial ---------- */
+  /* dial */
 
   const NS = "http://www.w3.org/2000/svg";
   function mk(tag, attrs) {
@@ -384,8 +383,7 @@
       }));
     }
 
-    // All eight labels share one ring. The intercardinals are smaller and
-    // dimmer so they name the diagonal spokes without crowding N/E/S/W.
+    // Intercardinals are smaller and dimmer so they don't crowd N/E/S/W.
     [["N", 0], ["NE", 45], ["E", 90], ["SE", 135],
      ["S", 180], ["SW", 225], ["W", 270], ["NW", 315]].forEach(([lab, a]) => {
       const rad = a * Math.PI / 180, lr = R - 20;
@@ -458,7 +456,7 @@
     svg.appendChild(mk("circle", { class: "you-pip", cx, cy, r: 1.6 }));
   }
 
-  /* ---------- popovers ---------- */
+  /* popovers */
 
   function closeAllPopovers() {
     document.querySelectorAll(".popover[data-open='true']").forEach((p) => {
@@ -523,7 +521,7 @@
     if (ev.key === "Escape") closeAllPopovers();
   });
 
-  /* ---------- how-to screenshots ---------- */
+  /* how-to screenshots */
 
   const copyHowtoBtn = $("copyHowtoBtn");
   const copyHowto = $("copyHowto");
@@ -541,13 +539,12 @@
     if (img.complete && img.naturalWidth === 0) missing();
   });
 
-  /* ---------- actions ---------- */
+  /* actions */
 
   el.copyBtn.addEventListener("click", async () => {
     if (!lastSolution) return;
     const { s } = lastSolution;
-    /* Name the gun the target is in range for; a target in the dead band or
-       beyond either gun gets the bearing and range on their own. */
+    // Name the gun in range; otherwise just the bearing and range.
     const m = s.metres;
     let prefix = "";
     if (m >= MORTAR.min && m <= MORTAR.max) prefix = "Mortar ";
@@ -571,7 +568,7 @@
     el.youX.focus();
   });
 
-  /* ---------- wiring ---------- */
+  /* wiring */
 
   [el.youX, el.youY, el.tgtX, el.tgtY, el.spX, el.spY, el.spBrg, el.spRng]
     .forEach((i) => i.addEventListener("input", recalc));
@@ -604,18 +601,15 @@
   setSpotterEnabled(false);
   recalc();
 
-  // the webfonts change how wide a value renders, so measure again once they land
+  // webfonts change value widths, so measure again once they load
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => { placeUnit(el.spBrg); placeUnit(el.spRng); });
   }
 
-  /* ---------- footer ---------- */
+  /* footer */
 
-  /* Throwaway lines that cycle on click. Each load draws a random handful of them
-     in a random order, one per backdrop change across two laps of the backdrops,
-     and once they have all been shown the footer settles on the ko-fi link and
-     stays there. Every click advances the backdrop, so the 6th click is both the
-     second lap finishing and the one that brings up the link. */
+  /* Throwaway lines that cycle on click. Each load picks a random few, one per
+     backdrop change across two laps, then the footer settles on the ko-fi link. */
   const FOOTER_LINES = [
     "Other rangefinding tools are available",
     "Please mortar responsibly",
@@ -636,10 +630,10 @@
   ];
   const FOOTER_LAST = { text: "Buy me a coffee here.", href: "https://ko-fi.com/jann3" };
   const BG_COUNT = 3;
-  const BG_LAPS = 2;                        // go round the backdrops twice...
-  const LINE_COUNT = BG_COUNT * BG_LAPS;    // ...showing one line per stop, then the link
+  const BG_LAPS = 2;
+  const LINE_COUNT = BG_COUNT * BG_LAPS;    // one line per backdrop stop, then the link
 
-  // Fisher–Yates over a copy, then keep the first LINE_COUNT
+  // Fisher-Yates shuffle of a copy, keeping the first n
   function pickLines(pool, n) {
     const a = pool.slice();
     for (let i = a.length - 1; i > 0; i--) {
@@ -666,8 +660,7 @@
     return /ms$/.test(v) ? n : n * 1000;
   }
 
-  /* Ride the incoming image in on html::before, then hand it to the base layer
-     and clear the top one behind what is now an identical picture. */
+  // Fade the new image in on html::before, then hand it to the base layer and clear the top one.
   function advanceBackdrop() {
     bgIdx = (bgIdx % BG_COUNT) + 1;
     root.style.setProperty("--bg-next", bgUrl(bgIdx));
@@ -702,7 +695,7 @@
     return a;
   }
 
-  /* The line swaps instantly — only the backdrop behind it cross-fades. */
+  // The line swaps instantly; only the backdrop cross-fades.
   function swapFooter(node, keepFocus) {
     footerEl.replaceChildren(node);
     if (keepFocus) node.focus();   // keyboard users stay on the line they were on
