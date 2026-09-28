@@ -392,7 +392,7 @@
         class: lab === "N" ? "cardinal north" : (ordinal ? "cardinal ordinal" : "cardinal"),
         x: cx + lr * Math.sin(rad), y: cy - lr * Math.cos(rad) + (ordinal ? 3 : 4),
         "text-anchor": "middle",
-        "font-family": "'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif",
+        "font-family": "'Saira Condensed', 'Bahnschrift', 'Arial Narrow', sans-serif",
         "font-size": ordinal ? 9.5 : 13, "font-weight": 600, "letter-spacing": "0.08em"
       });
       t.textContent = lab;
@@ -427,7 +427,7 @@
       svg.appendChild(mk("circle", { class: "spot-dot", cx: sp.x, cy: sp.y, r: 4.5,
         "stroke-width": 1.8 }));
       const lab = mk("text", { class: "spot-label", x: sp.x, y: sp.y - 10, "text-anchor": "middle",
-        "font-family": "'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif", "font-size": 10,
+        "font-family": "'Saira Condensed', 'Bahnschrift', 'Arial Narrow', sans-serif", "font-size": 10,
         "letter-spacing": "0.1em" });
       lab.textContent = "SPOT";
       svg.appendChild(lab);

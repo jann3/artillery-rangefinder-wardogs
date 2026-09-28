@@ -89,8 +89,8 @@
   --shell: 680px;
   --shell-wide: 1160px;
 
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-condensed: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  --font-sans: 'Inter', 'Segoe UI', Roboto, system-ui, sans-serif;
+  --font-condensed: 'Saira Condensed', 'Bahnschrift', 'Arial Narrow', sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
