@@ -36,6 +36,65 @@
 	<meta name="robots" content="index, follow">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<meta name="language" content="English">
+	<meta property="og:updated_time" content="2026-09-28">
+	<meta name="last-modified" content="2026-09-28">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Wardogs Artillery Rangefinder">
+	<meta name="twitter:description"
+		content="A tool for ranging mortar and artillery between two targets in the videogame 'Wardogs', also with spotter rangefinding.">
+	<meta name="twitter:image" content="https://janne.dev/rangefinder/images/wardogs-artillery-rangefinder.webp">
+	<script type="application/ld+json">
+	{
+	  "@context": "https://schema.org",
+	  "@graph": [
+	    {
+	      "@type": "SoftwareApplication",
+	      "name": "Wardogs Artillery Rangefinder",
+	      "url": "https://janne.dev/rangefinder/",
+	      "description": "A free browser tool for ranging mortar and artillery between two map co-ordinates in the videogame Wardogs, with support for spotter-called targets.",
+	      "applicationCategory": "GameApplication",
+	      "operatingSystem": "Any",
+	      "browserRequirements": "Requires JavaScript",
+	      "isAccessibleForFree": true,
+	      "offers": {
+	        "@type": "Offer",
+	        "price": "0",
+	        "priceCurrency": "USD"
+	      },
+	      "dateModified": "2026-09-28"
+	    },
+	    {
+	      "@type": "FAQPage",
+	      "mainEntity": [
+	        {
+	          "@type": "Question",
+	          "name": "How do you calculate bearing and range in Wardogs?",
+	          "acceptedAnswer": {
+	            "@type": "Answer",
+	            "text": "Range uses Pythagoras: subtract the positions to get dx and dy, square and add them, take the square root, then multiply by 100 for metres. Bearing uses atan2(dx, dy), giving degrees clockwise from north as the guns use, with negative results having 360 added. Always subtract target minus you, or the bearing is reversed. These firing solutions are based only on the map grid, with no elevation, windage/drift or charge adjustments."
+	          }
+	        },
+	        {
+	          "@type": "Question",
+	          "name": "How is a spotter's call converted into target co-ordinates?",
+	          "acceptedAnswer": {
+	            "@type": "Answer",
+	            "text": "The spotter's bearing and range are turned into target co-ordinates using x = sx + r*sin(theta) and y = sy + r*cos(theta), where r is their range in grid units. Those co-ordinates then go through the normal calculation from your position. Accuracy depends on the spotter's call: at 650 M, one degree off puts the target about 11 M to the side."
+	          }
+	        },
+	        {
+	          "@type": "Question",
+	          "name": "What are the firing ranges of the L81 Mortar and SPH-2 Artillery in Wardogs?",
+	          "acceptedAnswer": {
+	            "@type": "Answer",
+	            "text": "The L81 Mortar fires from 52 M to 685 M. The SPH-2 Artillery fires from 745 M to 2660 M. Targets from 686 M to 744 M fall in a dead band, too far for the mortar and too close for the artillery, so the gun needs to be moved to get in range."
+	          }
+	        }
+	      ]
+	    }
+	  ]
+	}
+	</script>
 <script>
 /* Picks the backdrop for this load. Inline so it runs before first paint. */
 (function () {
