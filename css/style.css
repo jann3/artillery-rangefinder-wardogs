@@ -88,6 +88,9 @@
 
   --shell: 680px;
   --shell-wide: 1160px;
+
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-condensed: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -101,7 +104,7 @@ body {
   padding: 40px 20px;
   background: var(--brown-900);
   color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.55;
   display: flex;
@@ -165,7 +168,7 @@ body::after {
 .shell > * { max-width: var(--shell); margin-inline: auto; }
 
 h1, h2 {
-  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  font-family: var(--font-condensed);
   letter-spacing: 0.045em;
   text-transform: uppercase;
   margin: 0;
@@ -245,7 +248,7 @@ header {
   background: var(--yellow-wash);
   border: 1px solid var(--yellow-edge);
   color: var(--yellow);
-  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 12px;
   font-weight: 700;
   display: grid;
@@ -254,7 +257,7 @@ header {
 .howto code { color: var(--yellow-soft); background: var(--brown-750); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
 
 .howto-head {
-  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.13em;
@@ -389,7 +392,7 @@ header {
 .shot-frame:has(img:not([hidden])) { border-style: solid; }
 .shot-frame::before {
   content: attr(data-label);
-  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -399,7 +402,7 @@ header {
 .shot-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .shot figcaption { margin-top: 7px; font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
 .shot kbd {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
   padding: 1px 5px;
@@ -434,7 +437,7 @@ header {
 .row.spotter-detail { grid-template-columns: 112px repeat(4, 1fr) auto; }
 
 .row-label {
-  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -462,7 +465,7 @@ header {
 .field-suffix {
   position: absolute;
   left: 12px;
-  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 13px;
   font-weight: 600;
   color: var(--yellow-dim);
@@ -486,7 +489,7 @@ input[type="text"] {
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   color: var(--text);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   font-size: 14.5px;
   font-variant-numeric: tabular-nums;
   transition: border-color 120ms ease, box-shadow 120ms ease;
@@ -552,7 +555,7 @@ input.is-bad:focus { box-shadow: 0 0 0 3px var(--red-wash); }
 }
 
 /* buttons */
-button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; background: none; color: inherit; }
+button { font-family: var(--font-sans); cursor: pointer; border: none; background: none; color: inherit; }
 
 .btn {
   padding: 9px 18px;
@@ -623,7 +626,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   border-radius: var(--r-lg);
   box-shadow: 0 14px 34px color-mix(in srgb, var(--shadow) 60%, transparent);
   /* reset type inherited from where the popover sits, e.g. the uppercase row labels */
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 400;
   letter-spacing: normal;
   text-transform: none;
@@ -700,7 +703,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   transition: background 160ms ease, border-color 160ms ease;
 }
 .readout-label {
-  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.13em;
@@ -709,7 +712,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   transition: color 160ms ease;
 }
 .readout-value {
-  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 42px;
   font-weight: 700;
   line-height: 1.05;
@@ -740,7 +743,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--brown-850);
-  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -781,7 +784,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   position: absolute;
   left: 7px; top: 50%;
   transform: translateY(-50%);
-  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -871,7 +874,7 @@ summary {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.06em;
