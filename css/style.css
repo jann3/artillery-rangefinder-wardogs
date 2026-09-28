@@ -165,7 +165,7 @@ body::after {
 .shell > * { max-width: var(--shell); margin-inline: auto; }
 
 h1, h2 {
-  font-family: 'Saira Condensed', 'Inter', sans-serif;
+  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
   letter-spacing: 0.045em;
   text-transform: uppercase;
   margin: 0;
@@ -245,7 +245,7 @@ header {
   background: var(--yellow-wash);
   border: 1px solid var(--yellow-edge);
   color: var(--yellow);
-  font-family: 'Saira Condensed', sans-serif;
+  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 700;
   display: grid;
@@ -254,7 +254,7 @@ header {
 .howto code { color: var(--yellow-soft); background: var(--brown-750); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
 
 .howto-head {
-  font-family: 'Saira Condensed', sans-serif;
+  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.13em;
@@ -389,7 +389,7 @@ header {
 .shot-frame:has(img:not([hidden])) { border-style: solid; }
 .shot-frame::before {
   content: attr(data-label);
-  font-family: 'Saira Condensed', sans-serif;
+  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -434,7 +434,7 @@ header {
 .row.spotter-detail { grid-template-columns: 112px repeat(4, 1fr) auto; }
 
 .row-label {
-  font-family: 'Saira Condensed', sans-serif;
+  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -462,7 +462,7 @@ header {
 .field-suffix {
   position: absolute;
   left: 12px;
-  font-family: 'Saira Condensed', sans-serif;
+  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 600;
   color: var(--yellow-dim);
@@ -700,7 +700,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   transition: background 160ms ease, border-color 160ms ease;
 }
 .readout-label {
-  font-family: 'Saira Condensed', sans-serif;
+  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.13em;
@@ -709,7 +709,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   transition: color 160ms ease;
 }
 .readout-value {
-  font-family: 'Saira Condensed', sans-serif;
+  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
   font-size: 42px;
   font-weight: 700;
   line-height: 1.05;
@@ -740,7 +740,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--brown-850);
-  font-family: 'Saira Condensed', sans-serif;
+  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -781,7 +781,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; backgr
   position: absolute;
   left: 7px; top: 50%;
   transform: translateY(-50%);
-  font-family: 'Saira Condensed', sans-serif;
+  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -871,7 +871,7 @@ summary {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Saira Condensed', sans-serif;
+  font-family: 'Saira Condensed', 'Arial Narrow', 'Bahnschrift', 'Inter', sans-serif;
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.06em;
