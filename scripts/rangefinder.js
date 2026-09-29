@@ -682,11 +682,14 @@
 
   function beerLink() {
     const a = document.createElement("a");
-    a.className = "footer-msg";
+    a.className = "footer-msg coffee-link";
     a.href = FOOTER_LAST.href;
     a.target = "_blank";
     a.rel = "noopener noreferrer";
-    a.append(FOOTER_LAST.text + " ");
+    const label = document.createElement("span");
+    label.className = "coffee-link-text";
+    label.textContent = FOOTER_LAST.text;
+    a.append(label, " ");
     const heart = document.createElement("span");
     heart.className = "footer-heart";
     heart.setAttribute("aria-label", "heart");

@@ -938,6 +938,8 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
 .footer-heart { color: #ff1169; }
 /* no hover colour: the pointer cursor already says it is clickable */
 .footer-msg:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-wash); }
+/* underline the "Buy me a coffee here." wording on hover, but not the heart */
+.coffee-link:hover .coffee-link-text { text-decoration: underline; }
 
 /* responsive */
 /* Rows and the solution respond to their panel's width, not the viewport.
