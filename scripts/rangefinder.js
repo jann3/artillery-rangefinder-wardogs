@@ -649,26 +649,74 @@
   let clicks = 0;
   let bgIdx = Number(root.dataset.bg) || 1;
 
-  // resolved against css/style.css, where the custom property is consumed
-  const bgUrl = (n) => "url('../images/background" + n + "-blur.webp')";
+  const backdropEl = $("backdrop");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  // absolute, since it lands in inline styles rather than css/style.css
+  const bgUrl = (n) => new URL("images/background" + n + "-blur.webp", document.baseURI).href;
+
+  // Decode every backdrop up front so a swap never stalls on the decoder mid-fade.
+  // The resolved Image is kept so the decoded copy stays cached.
+  const decoded = {};
+  function decodeBackdrop(n) {
+    if (!decoded[n]) {
+      const img = new Image();
+      img.src = bgUrl(n);
+      decoded[n] = img.decode().catch(() => {}).then(() => img);
+    }
+    return decoded[n];
+  }
+  for (let n = 1; n <= BG_COUNT; n++) decodeBackdrop(n);
 
   // CSS owns the duration; read it back so the two never drift apart.
   function swapMs() {
+    if (reduceMotion.matches) return 0;
     const v = getComputedStyle(root).getPropertyValue("--bg-swap").trim();
     const n = parseFloat(v);
     if (!n) return 0;
     return /ms$/.test(v) ? n : n * 1000;
   }
 
-  // Fade the new image in on html::before, then hand it to the base layer and clear the top one.
+  // Image layers on screen, bottom to top. Each swap fades a layer in on top of
+  // whatever is showing, so rapid clicks stack fades rather than cutting them off.
+  // Once a layer is fully opaque, the ones under it are hidden and detached; one
+  // is kept back, so normal use alternates between two layers.
+  const shown = [backdropEl.firstElementChild];
+  let spare = null;
+  let queue = Promise.resolve();
+
+  function retireBelow(layer) {
+    const i = shown.indexOf(layer);
+    if (i <= 0) return;
+    for (const old of shown.splice(0, i)) {
+      old.getAnimations().forEach((a) => a.cancel());
+      old.remove();
+      if (!spare) spare = old;
+    }
+  }
+
+  function fadeInBackdrop(n) {
+    const layer = spare || document.createElement("div");
+    spare = null;
+    layer.className = "backdrop-img";
+    layer.style.backgroundImage = 'url("' + bgUrl(n) + '")';
+    backdropEl.append(layer);   // last child paints on top
+    shown.push(layer);
+    const fade = layer.animate(
+      { opacity: [0, 1] },
+      { duration: swapMs(), easing: "ease-in-out", fill: "forwards" }
+    );
+    fade.finished.then(() => retireBelow(layer), () => {});
+  }
+
   function advanceBackdrop() {
     bgIdx = (bgIdx % BG_COUNT) + 1;
-    root.style.setProperty("--bg-next", bgUrl(bgIdx));
-    root.classList.add("bg-swap");
-    window.setTimeout(() => {
-      root.style.setProperty("--bg-image", bgUrl(bgIdx));
-      root.classList.remove("bg-swap");
-    }, swapMs());
+    const n = bgIdx;
+    // chained so fades start in click order even if a decode is still pending
+    queue = queue
+      .then(() => decodeBackdrop(n))
+      .then(() => fadeInBackdrop(n))
+      .catch(() => {});
   }
 
   function lineButton(text) {

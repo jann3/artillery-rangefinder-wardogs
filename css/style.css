@@ -28,15 +28,21 @@
    fallback. Paths resolve against css/, hence the ../ */
 :root {
   --bg-image: url('../images/background1-blur.webp');
-  --bg-brightness: 0.65;       /* 1 = image at full brightness */
   --bg-overlay-top: 38.5%;     /* dark overlay strength, top of screen */
   --bg-overlay-bottom: 57.4%;  /* dark overlay strength, bottom of screen */
   --bg-fade: 2s;               /* how long the backdrop takes to fade in */
   --bg-swap: 1.1s;             /* cross-fade when the footer cycles the backdrop */
+  /* The images ship pre-blurred and pre-graded (saturate 0.7, brightness 0.65) so
+     no filter runs at draw time. Colours drawn with them carry the same grade;
+     re-derive these if the palette tokens they come from change. */
+  --bg-base:      #090908;     /* --brown-950, graded */
+  --bg-glow:      #958031;     /* --yellow, graded */
+  --bg-glow-dim:  #493f1b;     /* --yellow-dim 85% toward black, graded */
+  --bg-glow-line: #262621;     /* --line, graded */
   --bg-gradients:
-    radial-gradient(closest-side at 22% 18%, color-mix(in srgb, var(--yellow) 22%, transparent), transparent 70%),
-    radial-gradient(closest-side at 82% 72%, color-mix(in srgb, color-mix(in srgb, var(--yellow-dim) 85%, black) 30%, transparent), transparent 72%),
-    radial-gradient(closest-side at 55% 105%, color-mix(in srgb, var(--line) 55%, transparent), transparent 70%);
+    radial-gradient(closest-side at 22% 18%, color-mix(in srgb, var(--bg-glow) 22%, transparent), transparent 70%),
+    radial-gradient(closest-side at 82% 72%, color-mix(in srgb, var(--bg-glow-dim) 30%, transparent), transparent 72%),
+    radial-gradient(closest-side at 55% 105%, color-mix(in srgb, var(--bg-glow-line) 55%, transparent), transparent 70%);
 }
 
 /* Theme: tweak the base colours; tints, borders, the dial and icons are mixed from them. */
@@ -112,41 +118,36 @@ body {
   align-items: center;  /* centres vertically; taller pages just scroll from the top */
 }
 
-/* Two backdrop layers: body::before is the current image, html::before the
-   incoming one that fades in over it. Afterwards the base adopts the new image
-   and the top layer is cleared. */
-html::before,
-body::before {
-  content: "";
+/* Backdrop: a stack of image layers under a static glow. A swap fades a new layer
+   in on top, then drops the layers it has covered (see advanceBackdrop). Only
+   opacity animates, so the compositor blends it without repainting. */
+.backdrop {
   position: fixed;
-  inset: -60px;
-  background-color: var(--brown-950);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  /* no blur(): the images ship pre-blurred */
-  filter: saturate(0.7) brightness(var(--bg-brightness));
-  transform: scale(1.06);
-}
-body::before {
-  z-index: -3;
-  background-image: var(--bg-gradients), var(--bg-image, none);
-  animation: bg-fade-in var(--bg-fade) ease-in-out forwards;
-}
-html::before {
+  inset: 0;
   z-index: -2;
-  background-image: var(--bg-gradients), var(--bg-next, none);
-  opacity: 0;
-  transition: opacity var(--bg-swap) ease-in-out;
+  background-color: var(--bg-base);
+  animation: bg-fade-in var(--bg-fade) ease-in-out;
 }
-html.bg-swap::before { opacity: 1; }
+.backdrop-img,
+.backdrop::after {
+  position: absolute;
+  inset: 0;
+}
+.backdrop-img {
+  background: var(--bg-image, none) center / cover no-repeat;
+  will-change: opacity;
+}
+/* after the image layers in tree order, so it always sits on top of them */
+.backdrop::after {
+  content: "";
+  background-image: var(--bg-gradients);
+}
 @keyframes bg-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
-  body::before { animation-duration: 0s; }
-  html::before { transition-duration: 0s; }
+  .backdrop { animation-duration: 0s; }
 }
 body::after {
   content: "";
