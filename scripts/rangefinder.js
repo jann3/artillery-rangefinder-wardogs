@@ -94,6 +94,12 @@
     el.status.classList.toggle("err", !!isError);
   }
 
+  function textSpan(text) {
+    const span = document.createElement("span");
+    span.textContent = text;
+    return span;
+  }
+
   function bearingText(deg) {
     return String(Math.round(deg) % 360).padStart(3, "0");
   }
@@ -382,7 +388,11 @@
     el.solutionWrap.hidden = false;
 
     el.outBearing.textContent = bearingText(s.bearing) + " " + compassAbbr(s.bearing);
-    el.outBearingSub.textContent = s.bearing.toFixed(2) + "° true · " + compassPoint(s.bearing);
+    // two parts so the compact layout can wrap between them (css/style.css draws the " · ")
+    el.outBearingSub.replaceChildren(
+      textSpan(s.bearing.toFixed(2) + "° true"),
+      textSpan(compassPoint(s.bearing))
+    );
 
     el.outRange.textContent = Math.round(s.metres).toLocaleString() + " M";
     el.outRangeSub.textContent = s.units.toFixed(4) + " grid units · dx " +

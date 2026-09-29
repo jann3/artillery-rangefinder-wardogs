@@ -174,12 +174,12 @@ h1, h2 {
   text-transform: uppercase;
   margin: 0;
 }
-h1 { font-size: 30px; font-weight: 700; line-height: 1.1; }
-h1 .slashes { color: var(--yellow); margin-right: 8px; }
+h1 { font-size: 30px; font-weight: 700; line-height: 1.1; white-space: nowrap; }
+h1 .slashes { color: var(--yellow); margin-right: 0.27em; }
 h2 { font-size: 15px; font-weight: 600; color: var(--text-2); }
 strong { color: var(--white); font-weight: 600; }
 
-.strapline { color: var(--text-2); font-size: 13.5px; margin: 4px 0 22px; }
+.strapline { color: var(--text-2); font-size: 13.5px; margin: 4px 0 22px; white-space: nowrap; }
 .strapline code { color: var(--yellow-soft); }
 
 /* dark halo keeps the title readable over the background */
@@ -723,6 +723,7 @@ button { font-family: var(--font-sans); cursor: pointer; border: none; backgroun
   transition: color 160ms ease;
 }
 .readout-sub { font-size: 12px; color: var(--muted); margin-top: 3px; font-variant-numeric: tabular-nums; }
+.readout-sub > span:first-child::after { content: " · "; }
 
 .readout.is-out {
   background: linear-gradient(180deg,
@@ -957,6 +958,30 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
   .solution { grid-template-columns: 1fr; gap: 18px; }
   .readout-value { font-size: 36px; }
 }
+/* One-panel layout (the inverse of the two-up query): the bearing detail sits beside
+   the value, wrapping to two lines when short of room, and the range detail is dropped. */
+@container shell (width < 1040px) {
+  .readout { display: flex; flex-wrap: wrap; align-items: center; column-gap: 14px; }
+  .readout-label { flex-basis: 100%; }
+  /* basis 0 so the detail only drops below the value when even two lines won't fit;
+     overflow:hidden zeroes the automatic minimum, so restore it explicitly */
+  .readout-sub {
+    flex: 1 1 0;
+    min-width: min-content;
+    margin-top: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+  .readout-sub > span { white-space: nowrap; }
+  /* The separator overhangs the first part's right edge. On one line the second part's
+     margin makes room for it; once wrapped it sits past the edge and is clipped. */
+  .readout-sub > span:first-child { margin-right: -1.3em; }
+  .readout-sub > span:first-child::after { display: inline-block; width: 1.3em; text-align: center; }
+  .readout-sub > span + span { margin-left: 1.3em; }
+  #outRangeSub { display: none; }
+}
 @container panel (max-width: 460px) {
   .row { grid-template-columns: 1fr 1fr; gap: 9px; padding: 12px 13px; }
   .row-label { grid-column: 1 / -1; }
@@ -972,7 +997,10 @@ footer:empty { display: none; }   /* no gap under the page until footer text is 
 
 @media (max-width: 620px) {
   body { padding: 24px 14px; }
-  h1 { font-size: 25px; }
+  /* shrink with the shell instead of wrapping: the title runs ~15.1em and the
+     strapline ~24em wide, so these cqi values leave a little headroom */
+  h1 { font-size: min(25px, 6.2cqi); }
+  .strapline { font-size: min(13.5px, 3.9cqi); }
   .popover { width: min(272px, calc(100vw - 56px)); }
   .band-tag { font-size: 9.5px; letter-spacing: 0.06em; }
 }
