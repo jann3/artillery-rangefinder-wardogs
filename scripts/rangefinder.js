@@ -18,6 +18,9 @@
     marker: $("marker"), scale: $("scale"), verdict: $("verdict"),
     status: $("status"), mathLive: $("mathLive"), copyBtn: $("copyBtn")
   };
+  el.readouts = el.outBearing.closest(".readouts");
+  el.solutionPanel = el.solutionWrap.closest(".panel");
+  el.positionsPanel = el.rowYou.closest(".panel");
 
   const METRES_PER_UNIT = 100;
 
@@ -41,6 +44,50 @@
   };
 
   const pct = (m) => Math.max(0, Math.min(100, (m / TRACK_MAX) * 100));
+
+  /* scrolling */
+
+  const SCROLL_GAP = 12;          // breathing room above/below a scrolled-to panel
+  const SCROLL_SETTLE_MS = 800;   // wait for typing to pause before moving the page
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let scrollTimer = null;
+
+  // visualViewport excludes the on-screen keyboard, innerHeight does not on iOS.
+  const viewHeight = () => (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+
+  function isFullyVisible(node) {
+    const r = node.getBoundingClientRect();
+    return r.top >= 0 && r.bottom <= viewHeight();
+  }
+
+  // Bring a panel's top into view, but never so far that `mustSee` drops off the bottom.
+  function scrollPanelIntoView(panel, mustSee) {
+    const panelTop = panel.getBoundingClientRect().top;
+    let delta = panelTop - SCROLL_GAP;
+    if (mustSee) {
+      const seeBottom = mustSee.getBoundingClientRect().bottom;
+      if (seeBottom - delta > viewHeight() - SCROLL_GAP) delta = seeBottom - viewHeight() + SCROLL_GAP;
+    }
+    window.scrollTo({
+      top: window.scrollY + delta,
+      behavior: reduceMotion.matches ? "auto" : "smooth"
+    });
+  }
+
+  function cancelSolutionScroll() {
+    clearTimeout(scrollTimer);
+    scrollTimer = null;
+  }
+
+  // Called on every recalc with a solution, so the timer restarts on each keystroke.
+  function queueSolutionScroll() {
+    cancelSolutionScroll();
+    scrollTimer = setTimeout(() => {
+      scrollTimer = null;
+      if (el.solutionWrap.hidden || isFullyVisible(el.readouts)) return;
+      scrollPanelIntoView(el.solutionPanel, el.readouts);
+    }, SCROLL_SETTLE_MS);
+  }
 
   function say(msg, isError) {
     el.status.textContent = msg || "";
@@ -316,6 +363,7 @@
       el.empty.hidden = false;
       setSolution(null);
       el.mathLive.textContent = "";
+      cancelSolutionScroll();
       return;
     }
 
@@ -326,6 +374,7 @@
       el.empty.hidden = false;
       say("You and the target are on the same spot.", true);
       setSolution(null);
+      cancelSolutionScroll();
       return;
     }
 
@@ -348,6 +397,7 @@
 
     setSolution({ you, target, s, a });
     drawDial(you, s);
+    queueSolutionScroll();
   }
 
   /* dial */
@@ -565,7 +615,12 @@
     el.spotterOn.checked = false;
     setSpotterEnabled(false);
     say("Cleared.");
-    el.youX.focus();
+    cancelSolutionScroll();
+    // preventScroll: focus() would otherwise jump the page instantly instead of smoothly
+    el.youX.focus({ preventScroll: true });
+    if (!isFullyVisible(el.positionsPanel.querySelector(".panel-head"))) {
+      scrollPanelIntoView(el.positionsPanel, el.rowYou);
+    }
   });
 
   /* wiring */
@@ -650,7 +705,6 @@
   let bgIdx = Number(root.dataset.bg) || 1;
 
   const backdropEl = $("backdrop");
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   // absolute, since it lands in inline styles rather than css/style.css
   const bgUrl = (n) => new URL("images/background" + n + "-blur.webp", document.baseURI).href;
